@@ -8,8 +8,89 @@
 
 kampfer.require('browser.support');
 
-kampfer.provide('dataManager');
-	
+kampfer.provide('data');
+
+//kampfer的数据缓存
+kampfer.data.cache = {};
+
+//用于标记缓存的id
+kampfer.data.cacheId = 0;
+
+//不能设置自定义属性的HTML tag名单
+kampfer.data.noData = {
+	"embed": true,
+	//object标签的clsid为以下值时可以设置自定义属性,
+	//其他情况object也不能设置自定义属性
+	"object": "clsid:D27CDB6E-AE6D-11cf-96B8-444553540000",
+	"applet": true
+};
+
+/*
+ * 判断对象是否能够设置自定义属性。所有plain object都能设置自定义属性，
+ * 而html dom中：embed/applet无法设置，obeject只有当clsid为特定值时可以设置。
+ * @param {object||html dom}obj
+ * @return {boolean}
+ */
+kampfer.data.acceptData = function(obj) {
+	if( elem.nodeName ) {
+		var match = kampfer.data.noData[ elem.nodeName.toLowerCase() ];
+		if( match ) {
+			return !(match === true || elem.getAttribute('classid') !== match);
+		}
+	}
+	return true;
+};
+
+/*
+ * 判断数据对象是否为空。必须区分两种情况：
+ * 1。用户的数据对象 所有用户的数据都储存在数据对象的data属性中。
+ * 2。kampfer的数据对象 kampfer的数据会被直接储存在数据对象中。
+ * @param {plain object}obj 这个对象一般取自kampfer.data.cache[expando]
+ *	或者elem[expando]
+ * @return {boolean}
+ */
+kampfer.data.isEmptyDataObj = function(obj) {
+	for(var name in obj) {
+		//检查用户定义的data（即cache.data）
+		if( name === 'data' && kampfer.isEmptyObject(obj[name]) ) {
+			continue;
+		}
+		if( name !== 'toJSON' ) {
+			return false;
+		}
+	}
+	return true;
+};
+
+//判断对象是否储存了数据。此方法先取到elem的数据对象，
+//再调用kampfer.data.isEmptyDataObj判断对象是否为空
+kampfer.data.hasData = function(elem) {
+	elem = elem.nodeType ? 
+		kampfer.data.cache[ elem[kampfer.expando] ] :
+		elem[kampfer.expando];
+	return !!elem && !kampfer.data.isEmptyDataObj(elem);
+};
+
+kampfer.data.setData = function(elem, name, value, inInternal) {
+	if( !kampfer.data.acceptData(elem) || !kampfer.type(name) !== 'string' ||
+		value === undefined ) {
+		return;
+	}
+
+	var expando = kampfer.expando,
+		isNode = !!elem.nodeType,
+		cache = isNode ? kampfer.data.cache : elem,
+		cacheId = isNode ? elem[expando] : elem[expando] && expando;
+};
+
+kampfer.data.getData = function() {
+
+};
+
+kampfer.data.removeData = function() {
+
+};
+
 (function(kampfer) {
 	
 	function _isEmptyDataObj(obj) {
