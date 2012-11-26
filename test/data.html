@@ -3,12 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-		<title>test data</title>
+		<title>test data.js</title>
 		<!--	共用文件，不要修改	start	-->
-		<link href="../css/qunit.css" rel="stylesheet" type="text/css" />
-		<script type="text/javascript" src="../js/base.js"></script>
-		<script type="text/javascript" src="../js/lib/tools/qunit.js"></script>
+		<link href="qunit/qunit.css" rel="stylesheet" type="text/css" />
+		<script type="text/javascript" src="../src/base.js"></script>
+		<script type="text/javascript" src="qunit/qunit.js"></script>
 		<!--	共用文件，不要修改	end	-->
+		<script type="text/javascript" src="../src/data.js"></script>
 	</head>
 	<body>
 		<!--	共用文件，不要修改	start	-->
@@ -21,5 +22,34 @@
 			test markup, will be hidden
 		</div>
 		<!--	共用文件，不要修改	end	-->
+		<script type="text/javascript">
+			test('data.acceptData', function() {
+				var obj = {},
+					div = document.createElement('div'),
+					applet = document.createElement('applet'),
+					embed = document.createElement('embed'),
+					object = document.createElement('object'),
+					flash = document.createElement('object');
+				object.setAttribute("classid", "clsid:8AD9C840-044E-11D1-B3E9-00805F499D93");
+				flash.setAttribute('classid', 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000');
+
+				equal(kampfer.data.acceptData(applet), false, '<applet>不能储存cache');
+				equal(kampfer.data.acceptData(embed), false, '<embed>不能储存cache');
+				equal(kampfer.data.acceptData(object), false, '<object>不能储存cache');
+				equal(kampfer.data.acceptData(flash), true, '<object> - flash能储存cache');
+				equal(kampfer.data.acceptData(obj), true, '{}能储存cache');
+				equal(kampfer.data.acceptData(div), true, '<div>能储存cache');
+			});
+
+			test('data.isEmptyDataObj', function() {
+				ok(data.isEmptyDataObj({}), '空对象');
+				ok(!data.isEmptyDataObj({foo:1}), '包含属性的对象');
+				ok(data.isEmptyDataObj({toJSON:function(){}}), '包含方法的对象');
+				ok(data.isEmptyDataObj({data:{}}, '只包含data属性的对象');
+				ok(!data.isEmptyDataObj({data:{},foo:1}, '包含属性的对象');
+				ok(!data.isEmptyDataObj({data:{foo:1}}, 'data属性包含其它属性的对象');
+				ok(data.isEmptyDataObj({data:{toJSON:function(){}}}, 'data属性包含方法的对象');
+			});
+		</script>
 	</body>
 </html>

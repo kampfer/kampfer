@@ -71,9 +71,6 @@ kampfer.data.hasData = function(elem) {
 	return !!elem && !kampfer.data.isEmptyDataObj(elem);
 };
 
-/**/
-kampfer.data.data = function() {};
-
 /*
  * 写缓存. 只接受key-value形式的参数.
  * @param {object||html dom}elem
@@ -96,7 +93,7 @@ kampfer.data.setData = function(elem, name, value, internal) {
 	// 设置cacheId
 	if(!cacheId) {
 		if(isNode) {
-			elem[expando] =  cacheId = ++kampfer.data.cacheId;
+			elem[expando] = cacheId = ++kampfer.data.cacheId;
 		} else {
 			cacheId = expando;
 		}
