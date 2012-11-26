@@ -5,9 +5,9 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 		<title>test data.js</title>
 		<!--	共用文件，不要修改	start	-->
-		<link href="qunit/qunit.css" rel="stylesheet" type="text/css" />
+		<link href="qunit/qunit/qunit.css" rel="stylesheet" type="text/css" />
 		<script type="text/javascript" src="../src/base.js"></script>
-		<script type="text/javascript" src="qunit/qunit.js"></script>
+		<script type="text/javascript" src="qunit/qunit/qunit.js"></script>
 		<!--	共用文件，不要修改	end	-->
 		<script type="text/javascript" src="../src/data.js"></script>
 	</head>
@@ -42,13 +42,13 @@
 			});
 
 			test('data.isEmptyDataObj', function() {
-				ok(data.isEmptyDataObj({}), '空对象');
-				ok(!data.isEmptyDataObj({foo:1}), '包含属性的对象');
-				ok(data.isEmptyDataObj({toJSON:function(){}}), '包含方法的对象');
-				ok(data.isEmptyDataObj({data:{}}, '只包含data属性的对象');
-				ok(!data.isEmptyDataObj({data:{},foo:1}, '包含属性的对象');
-				ok(!data.isEmptyDataObj({data:{foo:1}}, 'data属性包含其它属性的对象');
-				ok(data.isEmptyDataObj({data:{toJSON:function(){}}}, 'data属性包含方法的对象');
+				ok(kampfer.data.isEmptyDataObj({}), '空对象');
+				ok(!kampfer.data.isEmptyDataObj({foo:1}), '包含属性的对象');
+				ok(kampfer.data.isEmptyDataObj({toJSON:function(){}}), '包含方法的对象');
+				ok(kampfer.data.isEmptyDataObj({data:{}}), '只包含data属性的对象');
+				ok(!kampfer.data.isEmptyDataObj({data:{},foo:1}), '包含属性的对象');
+				ok(!kampfer.data.isEmptyDataObj({data:{foo:1}}), 'data属性包含其它属性的对象');
+				ok(kampfer.data.isEmptyDataObj({data:{toJSON:function(){}}}), 'data属性包含方法的对象');
 			});
 		</script>
 	</body>

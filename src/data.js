@@ -28,10 +28,10 @@ kampfer.data.noData = {
 /*
  * 判断对象是否能够设置自定义属性。所有plain object都能设置自定义属性，
  * 而html dom中：embed/applet无法设置，obeject只有当clsid为特定值时可以设置。
- * @param {object||html dom}obj
+ * @param {object||html dom}elem
  * @return {boolean}
  */
-kampfer.data.acceptData = function(obj) {
+kampfer.data.acceptData = function(elem) {
 	if( elem.nodeName ) {
 		var match = kampfer.data.noData[ elem.nodeName.toLowerCase() ];
 		if( match ) {
