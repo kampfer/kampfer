@@ -6,20 +6,13 @@
 
 kampfer.provide('browser.support');
 
-(function(kamp) {
-	
-	var support = {
-		deleteExpando : true
-	};
-	
+kampfer.browser.support.deleteExpando = (function() {
 	var div = document.createElement('div');
 	
 	try{
 		delete div.test;
+		return true;
 	} catch(e) {
-		support.deleteExpando = false;
+		return false;
 	}
-	
-	kamp.browser.support = support;
-	
-})(kampfer);
+})();
