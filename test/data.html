@@ -16,17 +16,17 @@
 		<!--	共用文件，不要修改	start	-->
 		<h1 id="qunit-header">QUnit for test</h1>
 		<h2 id="qunit-banner"></h2>
-		<div id="qunit-testrunner-toolbar"></div>
+		<elem id="qunit-testrunner-toolbar"></elem>
 		<h2 id="qunit-userAgent"></h2>
 		<ol id="qunit-tests"></ol>
-		<div id="qunit-fixture">
+		<elem id="qunit-fixture">
 			test markup, will be hidden
-		</div>
+		</elem>
 		<!--	共用文件，不要修改	end	-->
 		<script type="text/javascript">
 			test('data.acceptData', function() {
 				var obj = {},
-					div = document.createElement('div'),
+					elem = document.createElement('elem'),
 					applet = document.createElement('applet'),
 					embed = document.createElement('embed'),
 					object = document.createElement('object'),
@@ -39,7 +39,7 @@
 				equal(kampfer.data.acceptData(object), false, '<object>不能储存cache');
 				equal(kampfer.data.acceptData(flash), true, '<object> - flash能储存cache');
 				equal(kampfer.data.acceptData(obj), true, '{}能储存cache');
-				equal(kampfer.data.acceptData(div), true, '<div>能储存cache');
+				equal(kampfer.data.acceptData(elem), true, '<elem>能储存cache');
 			});
 
 			test('data.isEmptyDataObj', function() {
@@ -53,100 +53,141 @@
 			});
 
 			test('data.hasData', function() {
-				var div = document.createElement('div');
+				var elem = document.createElement('elem');
 				var obj = {};
 
-				ok(!kampfer.data.hasData(div) && !kampfer.data.hasData(obj), '初始状态没有数据cache');
+				ok(!kampfer.data.hasData(elem) && !kampfer.data.hasData(obj), '初始状态没有数据cache');
 
-				kampfer.data.setData(div, 'foo', 1);
+				kampfer.data.setData(elem, 'foo', 1);
 				kampfer.data.setData(obj, 'foo', 1);
 
-				ok(kampfer.data.hasData(div) && kampfer.data.hasData(obj), '有数据cache');
+				ok(kampfer.data.hasData(elem) && kampfer.data.hasData(obj), '有数据cache');
 
-				kampfer.data.removeData(div, 'foo');
+				kampfer.data.removeData(elem, 'foo');
 				kampfer.data.removeData(obj, 'foo');
 
-				ok(!kampfer.data.hasData(div) && !kampfer.data.hasData(obj), '删除数据后,没有数据cache');
+				ok(!kampfer.data.hasData(elem) && !kampfer.data.hasData(obj), '删除数据后,没有数据cache');
 			});
 
-			function dataTests (elem) {
-				var oldCacheLength, dataObj, internalDataObj, expected, actual;
-
-				equal( kampfer.data.getData(elem, "foo"), undefined, "No data exists initially" );
-				strictEqual( kampfer.data.hasData(elem), false, "kampfer.data.hasData agrees no data exists initially" );
-
-				equal( typeof kampfer.data.getData(elem), "undefined", "When no data exists, calling kampfer.data.getData with no args return undefined" );
-
-				kampfer.data.setData(elem, 'foo', 'foo');
-				dataObj = kampfer.data.getData(elem);
-				equal( typeof dataObj, 'object', 'When data exists, calling kampfer.data.getData with no args will return the data object');
-
-				dataObj["foo"] = "bar";
-				equal( kampfer.data.getData(elem, "foo"), "bar", "Data is readable by kampfer.data.getData when set directly on a returned data object" );
-
-				strictEqual( kampfer.data.hasData(elem), true, "kampfer.data.hasData agrees data exists when data exists" );
-
-				kampfer.data.setData(elem, "foo", "baz");
-				equal( kampfer.data.getData(elem, "foo"), "baz", "Data can be changed by kampfer.data.setData" );
-				equal( dataObj["foo"], "baz", "Changes made through kampfer.data.setData propagate to referenced data object" );
-
-				kampfer.data.setData(elem, "foo", undefined);
-				equal( kampfer.data.getData(elem, "foo"), "baz", "Data is not unset by passing undefined to kampfer.data.setData" );
-
-				kampfer.data.setData(elem, "foo", null);
-				strictEqual( kampfer.data.getData(elem, "foo"), null, "Setting null using kampfer.data.setData works OK" );
-
-				kampfer.data.setData(elem, "foo", "foo1");
-
-				kampfer.data.setData(elem, { "bar" : "baz", "boom" : "bloz" });
-				strictEqual( kampfer.data.getData(elem, "foo"), "foo1", "Passing an object extends the data object instead of replacing it" );
-				equal( kampfer.data.getData(elem, "boom"), "bloz", "Extending the data object works" );
-
-				kampfer.data.setData(elem, "foo", "foo2", true);
-				equal( kampfer.data.getData(elem, "foo", true), "foo2", "Setting internal data works" );
-				equal( kampfer.data.getData(elem, "foo"), "foo1", "Setting internal data does not override user data" );
-
-				internalDataObj = kampfer.data.getData( elem, true );
-				ok( internalDataObj, "Internal data object exists" );
-				notStrictEqual( dataObj, internalDataObj, "Internal data object is not the same as user data object" );
-
-				strictEqual( elem.boom, undefined, "Data is never stored directly on the object" );
-
-				kampfer.data.removeData(elem, "foo");
-				strictEqual( kampfer.data.getData(elem, "foo"), undefined, "kampfer.data.removeData removes single properties" );
-
-				kampfer.data.removeData(elem);
-				strictEqual( kampfer.data.getData(elem, true), internalDataObj, "kampfer.data.removeData does not remove internal data if it exists" );
-
-				kampfer.data.setData(elem, "foo", "foo1");
-				kampfer.data.setData(elem, "foo", "foo2", true);
-
-				equal( kampfer.data.getData(elem, "foo"), "foo1", "(sanity check) Ensure data is set in user data object" );
-				equal( kampfer.data.getData(elem, "foo", true), "foo2", "(sanity check) Ensure data is set in internal data object" );
-
-				strictEqual( kampfer.data.getData(elem, kampfer.expando, true), undefined, "Removing the last item in internal data destroys the internal data object" );
-
-				kampfer.data.setData(elem, "foo", "foo2", true);
-				equal( kampfer.data.getData(elem, "foo", true), "foo2", "(sanity check) Ensure data is set in internal data object" );
-
-				kampfer.data.removeData(elem, "foo");
-				equal( kampfer.data.getData(elem, "foo", true), "foo2", "(sanity check) kampfer.data.removeData for user data does not remove internal data" );
-			}
-
 			test('data.setData', function() {
-				var div = document.createElement('div');
+				var elem = document.createElement('elem');
 				var obj = {};
 
-				dataTests(div);
-				dataTests(obj);
+				function test(elem) {
+					equal( kampfer.data.getData(elem, "foo"), undefined, "初始状态没有data" );
+					strictEqual( kampfer.data.hasData(elem), false, "kampfer.data.hasData确定没有数据");
+
+					kampfer.data.setData(elem, 'foo', 'foo');
+					ok(elem[kampfer.expando], 'expando存在');
+					equal(kampfer.data.getData(elem, 'foo'), 'foo', 'kampfer.data.setData成功设置data');
+
+					kampfer.data.setData(elem, 'foo', undefined);
+					equal(kampfer.data.getData(elem, 'foo'), 'foo', '传递undefined给kampfer.data.setData时data不会被重置');
+
+					kampfer.data.setData(elem, 'foo', null);
+					equal(kampfer.data.getData(elem, 'foo'), null, 'kampfer.data.setData能够将data重置为null');
+
+					kampfer.data.setData(elem, 'foo', 'foo1', true);
+					equal(kampfer.data.getData(elem, 'foo', true), 'foo1', '设置internal data');
+					equal(kampfer.data.getData(elem, 'foo'), null, 'internal data不会影响user data');
+
+					kampfer.data.setData(elem, { "bar" : "baz", "boom" : "bloz" });
+					equal(kampfer.data.getData(elem, 'foo'), null, '传递对象给kampfer.data.setData时不会覆盖不同名的已有数据');
+					equal(kampfer.data.getData(elem, 'bar'), 'baz', '传递对象调用kampfer.data.setData成功');
+				}
+
+				test(elem);
+				test(obj);
 			});
 
 			test('data.getData', function() {
-				ok(true);
+				var elem = document.createElement('elem');
+				var obj = {};
+
+				function test(elem) {
+					var dataObj, internalDataObj;
+
+					equal( kampfer.data.getData(elem, "foo"), undefined, "初始状态没有data" );
+					equal( kampfer.data.getData(elem), undefined, 'kampfer.data.getData不会生成新的空data object');
+					strictEqual( kampfer.data.hasData(elem), false, "kampfer.data.hasData确定没有数据");
+
+					kampfer.data.setData(elem, 'foo', 'foo');
+					dataObj = kampfer.data.getData(elem);
+					equal(typeof dataObj, 'object', '不传递data name调用kampfer.data.getData将返回整个data object');
+					equal(kampfer.data.getData(elem, 'foo'), 'foo', 'kampfer.data.getData成功取得data');
+
+					dataObj.foo = 'foo2';
+					equal(kampfer.data.getData(elem, 'foo'), 'foo2', '直接操作data object');
+
+					kampfer.data.setData(elem, 'foo', 'foo', true);
+					equal(kampfer.data.getData(elem, 'foo', true), 'foo', '获取内部data');
+					equal(kampfer.data.getData(elem, 'foo') , 'foo2', '获得user data');
+
+					kampfer.data.setData(elem, 'foo', 'foo');
+					internalDataObj = kampfer.data.getData(elem, true);
+					notStrictEqual( dataObj, internalDataObj, "Internal data object !== user data object" );
+				}
+				
+				test(elem);
+				test(obj);
 			});
 
 			test('data.removeData', function() {
-				ok(true);
+				var elem = document.createElement('elem');
+				var obj = {};
+
+				function test(elem) {
+					kampfer.data.setData(elem, 'foo', 'foo');
+					kampfer.data.setData(elem, 'foo', 'foo', true);
+					
+					equal(kampfer.data.getData(elem, 'foo'), 'foo', '成功设置data');
+					equal(kampfer.data.getData(elem, 'foo', true), 'foo', '成功设置internal data');
+
+					kampfer.data.removeData(elem, 'foo', true);
+					equal(kampfer.data.getData(elem, 'foo', true), undefined, '成功删除内部data');
+					equal(kampfer.data.getData(elem, 'foo'), 'foo', 'removeData没有影响user data');
+
+					kampfer.data.removeData(elem, 'foo');
+					equal(kampfer.data.getData(elem, 'foo'), undefined, '成功删除user data');
+				}
+
+				test(elem);
+				test(obj);
+			});
+
+			test('expando', function() {
+				var div = document.createElement('elem');
+				var obj = {};
+
+				function test(elem) {
+					var expando, cache = !elem.nodeType ? elem : kampfer.data.cache;
+					ok(!elem[kampfer.expando], 'elem expando不存在');
+
+					kampfer.data.setData(elem, 'foo', 'foo');
+					kampfer.data.setData(elem, 'bar', 'bar');
+					ok(elem[kampfer.expando], 'elem expando存在');
+
+					kampfer.data.setData(elem, 'foo', 'foo', true);
+					expando = !elem.nodeType ? kampfer.expando : elem[kampfer.expando];
+					ok(cache[expando], 'elem internal data object 存在');
+					ok(cache[expando].data, 'elem user data object 存在');
+
+					kampfer.data.removeData(elem, 'foo');
+					ok(elem[kampfer.expando], '删除user data,但user data不为空 elem expando存在');
+					ok(cache[expando].data, '删除user data后,但user data不为空 elem user data object存在');
+
+					kampfer.data.removeData(elem, 'bar');
+					ok(elem[kampfer.expando], '删除user data,但internal data不为空 elem expando存在');
+					ok(!cache[expando].data, 'user data为空 elem user data object不再存在');
+					ok(cache[expando], 'internal data存在');
+
+					kampfer.data.removeData(elem, 'foo', true);
+					ok(!elem[kampfer.expando], 'elem expando不再存在');
+					ok(!cache[expando], 'data不再存在');
+				}
+
+				test(div);
+				test(obj);
 			});
 		</script>
 	</body>
