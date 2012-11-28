@@ -75,11 +75,11 @@
 				equal( kampfer.data.getData(elem, "foo"), undefined, "No data exists initially" );
 				strictEqual( kampfer.data.hasData(elem), false, "kampfer.data.hasData agrees no data exists initially" );
 
-				dataObj = kampfer.data.getData(elem);
-				equal( typeof dataObj, "object", "Calling data with no args gives us a data object reference" );
-				strictEqual( kampfer.data.getData(elem), dataObj, "Calling kampfer.data.getData returns the same data object when called multiple times" );
+				equal( typeof kampfer.data.getData(elem), "undefined", "When no data exists, calling kampfer.data.getData with no args return undefined" );
 
-				strictEqual( kampfer.data.hasData(elem), false, "kampfer.data.hasData agrees no data exists even when an empty data obj exists" );
+				kampfer.data.setData(elem, 'foo', 'foo');
+				dataObj = kampfer.data.getData(elem);
+				equal( typeof dataObj, 'object', 'When data exists, calling kampfer.data.getData with no args will return the data object');
 
 				dataObj["foo"] = "bar";
 				equal( kampfer.data.getData(elem, "foo"), "bar", "Data is readable by kampfer.data.getData when set directly on a returned data object" );
@@ -94,12 +94,12 @@
 				equal( kampfer.data.getData(elem, "foo"), "baz", "Data is not unset by passing undefined to kampfer.data.setData" );
 
 				kampfer.data.setData(elem, "foo", null);
-				strictEqual( kampfer.data.setData(elem, "foo"), null, "Setting null using kampfer.data.setData works OK" );
+				strictEqual( kampfer.data.getData(elem, "foo"), null, "Setting null using kampfer.data.setData works OK" );
 
 				kampfer.data.setData(elem, "foo", "foo1");
 
 				kampfer.data.setData(elem, { "bar" : "baz", "boom" : "bloz" });
-				strictEqual( kampfer.data.setData(elem, "foo"), "foo1", "Passing an object extends the data object instead of replacing it" );
+				strictEqual( kampfer.data.getData(elem, "foo"), "foo1", "Passing an object extends the data object instead of replacing it" );
 				equal( kampfer.data.getData(elem, "boom"), "bloz", "Extending the data object works" );
 
 				kampfer.data.setData(elem, "foo", "foo2", true);
@@ -124,7 +124,7 @@
 				equal( kampfer.data.getData(elem, "foo"), "foo1", "(sanity check) Ensure data is set in user data object" );
 				equal( kampfer.data.getData(elem, "foo", true), "foo2", "(sanity check) Ensure data is set in internal data object" );
 
-				strictEqual( kampfer.data.setData(elem, kampfer.data.expando, true), undefined, "Removing the last item in internal data destroys the internal data object" );
+				strictEqual( kampfer.data.getData(elem, kampfer.expando, true), undefined, "Removing the last item in internal data destroys the internal data object" );
 
 				kampfer.data.setData(elem, "foo", "foo2", true);
 				equal( kampfer.data.getData(elem, "foo", true), "foo2", "(sanity check) Ensure data is set in internal data object" );

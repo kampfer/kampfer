@@ -139,11 +139,15 @@ kampfer.data.getData = function(elem, name, internal) {
 		isNode = !!elem.nodeType,
 		cache = isNode ? kampfer.data.cache : elem,
 		cacheId = isNode ? elem[expando] : elem[expando] && expando,
-		hasName = kampfer.type(name) !== 'bool' && name !== undefined,
+		hasName = kampfer.type(name) !== 'boolean' && name !== undefined,
 		thisCache, ret;
 
 	if(!cacheId || !cache[cacheId]) {
 		return;
+	}
+
+	if(!hasName) {
+		internal = name;
 	}
 
 	thisCache = cache[cacheId];
@@ -179,7 +183,7 @@ kampfer.data.removeData = function(elem, name, internal) {
 		hasName = kampfer.type(name) !== 'bool' && name !== undefined,
 		thisCache;
 
-	if(!cacheId || !cache[cacheId]) {
+	if(!cacheId || !cache[cacheId] ||!hasName) {
 		return;
 	}
 
