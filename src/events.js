@@ -3,6 +3,7 @@ kampfer.require('data');
 
 kampfer.provide('events');
 kampfer.provide('events.Event');
+kampfer.provide('events.Listener');
 
 
 /*
@@ -130,20 +131,20 @@ kampfer.events.Event.isMouseEvent = function(type) {
  * @param {string}type
  * @param {object}scope
  */
-kampfer.events.HandlerObj = function(handler, type, scope) {
-	this.handler = handler;
-	this.type = type;
-	this.scope = scope;
-	this.key = kampfer.events.HandlerObj.key++;
+kampfer.events.Listener = function(listener, eventType, context) {
+	this.listener = listener;
+	this.eventType = eventType;
+	this.context = context;
+	this.key = kampfer.events.Listener.key++;
 };
 
 //销毁对象中指向其他对象的引用
-kampfer.events.HandlerObj.prototype.dispose = function() {
-	this.handler = null;
-	this.scope = null;
+kampfer.events.Listener.prototype.dispose = function() {
+	this.listener = null;
+	this.context = null;
 };
 
-kampfer.events.HandlerObj.key = 0;
+kampfer.events.Listener.key = 0;
 
 
 /*
@@ -154,8 +155,31 @@ kampfer.events.HandlerObj.key = 0;
  * @param {object}scope
  * TODO 支持捕获?
  */
-kampfer.events.addListener = function(elem, event, listener, context) {
-	var elemData = kampfer.data.getData(elem);
+kampfer.events.addListener = function(elem, eventType, listener, context) {
+	if( !elem || kampfer.type(listener) !== 'function' ) {
+		return;
+	}
+
+	var type = kampfer.type(eventType);
+	if( type === 'array' ) {
+		for(var i = 0, e; e = eventType[0]; i++) {
+			kampfer.events.addListener(elem, e, listener, context);
+		}
+		return;
+	} else if( type === 'string') {
+		var listenerObj = new kampfer.events.Listener(listener, eventType, context);
+
+		var events = kampfer.data.getDataInternal(elem, 'events');
+		if(!events) {
+			events = {};
+			kampfer.data.setDataInternal(elem, 'events', elemData);
+		}
+
+		if(!events[eventType]) {
+			events[eventType] = [];
+		}
+		events[eventType].push(listenerObj);
+	}
 };
 
 
@@ -166,7 +190,7 @@ kampfer.events.addListener = function(elem, event, listener, context) {
  * TODO 1.重复调用_data，需要优化
  * 		2.不传递type，就删除所有事件
  */ 
-kampfer.events.removeListener = function(elem, event, listener) {
+kampfer.events.removeListener = function(elem, eventType, listener) {
 
 };
 
@@ -179,6 +203,6 @@ kampfer.events.removeListener = function(elem, event, listener) {
  * TODO 使用fireEvent方法是否支持触发浏览器默认事件，比如点击a标签页面会跳转？
  *		jquery支持，而closure不支持
  */
-kampfer.events.dispatchEvent = function(elem, event) {
+kampfer.events.dispatchEvent = function(elem, eventType) {
 
 };

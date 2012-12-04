@@ -120,7 +120,7 @@ kampfer.data.setData = function(elem, name, value, internal) {
 		thisCache[name] = value;
 	}
 
-	return cacheId;
+	return thisCache;
 };
 
 /*
@@ -235,4 +235,20 @@ kampfer.data.removeData = function(elem, name, internal) {
 			elem[ expando ] = null;
 		}
 	}
+};
+
+
+//kampfer内部调用
+kampfer.data.setDataInternal = function(elem, name, value) {
+	kampfer.data.setData(elem, name, value, true);
+};
+
+//kampfer内部调用
+kampfer.data.getDataInternal = function(elem, name) {
+	kampfer.data.getData(elem, name, true);
+};
+
+//kampfer内部调用
+kampfer.data.removeDataInternal = function(elem, name) {
+	kampfer.data.removeData(elem, name, true);
 };

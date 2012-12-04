@@ -77,7 +77,8 @@
 					equal( kampfer.data.getData(elem, "foo"), undefined, "初始状态没有data" );
 					strictEqual( kampfer.data.hasData(elem), false, "kampfer.data.hasData确定没有数据");
 
-					kampfer.data.setData(elem, 'foo', 'foo');
+					var dataObj = kampfer.data.setData(elem, 'foo', 'foo');
+					ok(typeof dataObj === 'object', 'setData返回data object');
 					ok(elem[kampfer.expando], 'expando存在');
 					equal(kampfer.data.getData(elem, 'foo'), 'foo', 'kampfer.data.setData成功设置data');
 
@@ -137,8 +138,8 @@
 				var obj = {};
 
 				function test(elem) {
-					kampfer.data.setData(elem, 'foo', 'foo');
-					kampfer.data.setData(elem, 'foo', 'foo', true);
+					var dataObj = kampfer.data.setData(elem, 'foo', 'foo');
+					var internalDataObj = kampfer.data.setData(elem, 'foo', 'foo', true);
 					
 					equal(kampfer.data.getData(elem, 'foo'), 'foo', '成功设置data');
 					equal(kampfer.data.getData(elem, 'foo', true), 'foo', '成功设置internal data');
