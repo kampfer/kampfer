@@ -112,7 +112,6 @@ kampfer.data.setData = function(elem, name, value, internal) {
 		thisCache = thisCache.data;
 	}
 	
-
 	// 不做判断，直接覆盖旧值
 	if(kampfer.type(name) === 'object') {
 		thisCache = kampfer.extend(thisCache, name);

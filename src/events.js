@@ -161,18 +161,27 @@ kampfer.events.addListener = function(elem, eventType, listener, context) {
 	}
 
 	var type = kampfer.type(eventType);
+
 	if( type === 'array' ) {
 		for(var i = 0, e; e = eventType[0]; i++) {
 			kampfer.events.addListener(elem, e, listener, context);
 		}
 		return;
-	} else if( type === 'string') {
+	}
+
+	if( type === 'string') {
 		var listenerObj = new kampfer.events.Listener(listener, eventType, context);
 
 		var events = kampfer.data.getDataInternal(elem, 'events');
 		if(!events) {
 			events = {};
 			kampfer.data.setDataInternal(elem, 'events', elemData);
+		}
+
+		if(!events.proxy) {
+			events.proxy = function() {
+				kampfer.events.dispatch();
+			}
 		}
 
 		if(!events[eventType]) {
