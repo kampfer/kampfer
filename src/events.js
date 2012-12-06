@@ -182,6 +182,11 @@ kampfer.events.addListener = function(elem, eventType, listener, context) {
 			events.proxy = function() {
 				kampfer.events.dispatch();
 			}
+			if(elem.addEventListener) {
+				elem.addEventListener(eventType, events.proxy, 'false');
+			} else if(ele.attachEvent) {
+				elem.attachEvent('on' + eventType, events.proxy);
+			}
 		}
 
 		if(!events[eventType]) {
