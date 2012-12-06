@@ -156,7 +156,10 @@ kampfer.events.Listener.key = 0;
  * TODO 支持捕获?
  */
 kampfer.events.addListener = function(elem, eventType, listener, context) {
-	if( !elem || kampfer.type(listener) !== 'function' ) {
+	// filter commet and text node
+	// nor undefined eventType or listener
+	if( elem.nodeType === 3 || elem.nodeType === 8 || !eventType ||
+		kampfer.type(listener) !== 'function' ) {
 		return;
 	}
 
@@ -201,10 +204,36 @@ kampfer.events.addListener = function(elem, eventType, listener, context) {
  * 删除事件。此方法用于删除绑定在某类事件下的全部操作。
  * @param {object}elem
  * @param {string}type
- * TODO 1.重复调用_data，需要优化
- * 		2.不传递type，就删除所有事件
  */ 
 kampfer.events.removeListener = function(elem, eventType, listener) {
+	var elemData = kampfer.data.getDataInternal(elem)
+		events, type;
+
+	if( !elemData || !(events = elemData.events) ) {
+		return;
+	}
+
+	type = kampfer.type(eventType);
+
+	if(type === 'array') {
+		for(var i = 0; type = eventType[0]; i++) {
+			kampfer.events.removeListener(elem, e, listener);
+		}
+		return;
+	}
+
+	if(type === 'undefined') {
+		for(type in events) {
+			kampfer.events.removeListener(elem, type, listener);
+		}
+		return;
+	}
+
+	if(type === 'string') {
+		if(events[type]) {
+			
+		}
+	}
 
 };
 
@@ -218,5 +247,10 @@ kampfer.events.removeListener = function(elem, eventType, listener) {
  *		jquery支持，而closure不支持
  */
 kampfer.events.dispatchEvent = function(elem, eventType) {
+
+};
+
+
+kampfer.events.dispatch = function(event) {
 
 };
