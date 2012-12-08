@@ -150,10 +150,9 @@ kampfer.events.Listener.key = 0;
 /*
  * 添加事件
  * @param {object}elem
- * @param {string||array}type
- * @param {function}handler
- * @param {object}scope
- * TODO 支持捕获?
+ * @param {string||array}eventType
+ * @param {function}listener
+ * @param {object}context
  */
 kampfer.events.addListener = function(elem, eventType, listener, context) {
 	// filter commet and text node
@@ -182,20 +181,25 @@ kampfer.events.addListener = function(elem, eventType, listener, context) {
 		}
 
 		if(!events.proxy) {
-			events.proxy = function() {
-				kampfer.events.dispatch();
-			}
-			if(elem.addEventListener) {
-				elem.addEventListener(eventType, events.proxy, 'false');
-			} else if(ele.attachEvent) {
-				elem.attachEvent('on' + eventType, events.proxy);
-			}
+			events.proxy = function(e) {
+				kampfer.events.dispatchEvent(e);
+			};
 		}
 
-		if(!events[eventType]) {
-			events[eventType] = [];
+		if(elem.addEventListener) {
+			elem.addEventListener(eventType, events.proxy, 'false');
+		} else if(ele.attachEvent) {
+			elem.attachEvent('on' + eventType, events.proxy);
 		}
-		events[eventType].push(listenerObj);
+
+		if(!events.listeners) {
+			events.listeners = {};
+		}
+
+		if(!events.listeners[eventType]) {
+			events.listeners[eventType] = [];
+		}
+		events.listeners[eventType].push(listenerObj);
 	}
 };
 
@@ -203,21 +207,20 @@ kampfer.events.addListener = function(elem, eventType, listener, context) {
 /*
  * 删除事件。此方法用于删除绑定在某类事件下的全部操作。
  * @param {object}elem
- * @param {string}type
+ * @param {string}eventType
  */ 
 kampfer.events.removeListener = function(elem, eventType, listener) {
-	var elemData = kampfer.data.getDataInternal(elem)
-		events, type;
+	var events = kampfer.data.getDataInternal(elem);
 
-	if( !elemData || !(events = elemData.events) ) {
+	if( !events || events.listeners || !events.listeners[eventType]  ) {
 		return;
 	}
 
-	type = kampfer.type(eventType);
+	var type = kampfer.type(eventType);
 
 	if(type === 'array') {
 		for(var i = 0; type = eventType[0]; i++) {
-			kampfer.events.removeListener(elem, e, listener);
+			kampfer.events.removeListener(elem, type, listener);
 		}
 		return;
 	}
@@ -230,8 +233,25 @@ kampfer.events.removeListener = function(elem, eventType, listener) {
 	}
 
 	if(type === 'string') {
-		if(events[type]) {
-			
+		for(var i = 0, l; l = events.listeners[eventType][i]; i++) {
+			if(l.eventType === eventType && l.listener === listener) {
+				events.listeners[eventType].splice(i, 1);
+			}
+		}
+
+		if(!events.listeners[eventType].length) {
+			if(elem.removeEventListener) {
+				elem.removeEventListener(eventType, events.proxy, false);
+			} else if(elem.detachEvent) {
+				elem.detachEvent('on' + eventType, events.proxy);
+			}
+			delete events.listeners[eventType];
+		}
+
+		if( kampfer.isEmptyObject(events.listeners) ) {
+			delete events.listeners;
+			delete events.proxy;
+			kampfer.data.removeDataInternal(elem, 'events');
 		}
 	}
 
@@ -242,15 +262,30 @@ kampfer.events.removeListener = function(elem, eventType, listener) {
  * 触发对象的指定事件
  * @param {object}elem
  * @param {type}type
- * @param {object}data
- * TODO 使用fireEvent方法是否支持触发浏览器默认事件，比如点击a标签页面会跳转？
- *		jquery支持，而closure不支持
  */
-kampfer.events.dispatchEvent = function(elem, eventType) {
+kampfer.events.dispatch = function(elem, eventType) {
+	if(elem.nodeType === 3 || elem.nodeType === 8) {
+		return;
+	}
 
+	var events, listeners;
+
+	for(var cur = elem; cur; cur = cur.parentNode) {
+
+		events = kampfer.data.getDataInternal(cur, 'events');
+
+		if( !events || !(listeners = events.listeners) ) {
+			continue;
+		}
+
+		if(listeners[eventType]) {
+			for(var i = 0, listener; listener = listeners[eventType][i]; i++) {
+			}
+		}
+	}
 };
 
 
-kampfer.events.dispatch = function(event) {
+kampfer.events.dispatchEvent = function(event) {
 
 };
