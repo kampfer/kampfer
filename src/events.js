@@ -20,38 +20,67 @@ kampfer.provide('events.Listener');
  * - pageX/pageY	{number}
  */
 kampfer.events.Event = function(src) {
-	this.src = src;
-	this.type = src.type;
+	var srcType = kampfer.type(src);
+
+	if(srcType === 'object' && src.type) {
+		this.src = src;
+		this.type = src.type;
+	} else if(srcType === 'string') {
+		this.type = src;
+		
+	}
+
+	this.isImmediatePropagationStopped = false;
 	this.propagationStopped = false;
 	this.isDefaultPrevented = false;
-	
-	//跨越浏览器
-	this.fix();
 };
 
-//停止冒泡
-kampfer.events.Event.prototype.stopPropagation = function() {
-	//使用fireEvent触发事件时，需要读取propagationStopped，判断冒泡是否取消。
-	this.propagationStopped = true;
+kampfer.events.Event.prototype = {
+	constructor : kampfer.events.Event,
 
-	var e = this.src;
-	if(e.stopPropagation) {
-		e.stopPropagation();
-	} else {
-		e.cancelBubble = true;
+	//停止冒泡
+	stopPropagation : function() {
+		//触发事件时，需要读取propagationStopped，判断冒泡是否取消。
+		this.propagationStopped = true;
+
+		var e = this.src;
+		if(e.stopPropagation) {
+			e.stopPropagation();
+		} else {
+			e.cancelBubble = true;
+		}
+	},
+
+	//立即停止冒泡
+	stopImmediatePropagation : function() {
+
+	},
+
+	//阻止默认行为
+	preventDefault : function() {
+		this.isDefaultPrevented = true;
+		
+		var e = this.src;
+		if (e.preventDefault) {
+			e.preventDefault();
+		} else {
+			e.returnValue = false;
+		}
+	},
+
+	dispose : function() {
+		delete this.src;
 	}
 };
 
-//阻止默认行为
-kampfer.events.Event.prototype.preventDefault = function() {
-	this.isDefaultPrevented = true;
-	
-	var e = this.src;
-	if (e.preventDefault) {
-		e.preventDefault();
-	} else {
-		e.returnValue = false;
-	}
+
+/*
+ * 修复event,处理兼容性问题
+ * @param {object}event 浏览器生成的原始event对象
+ * @return {object} 修复的event对象
+ */
+kampfer.events.fixEvent = function(event) {
+
 };
 
 //处理兼容性问题
@@ -100,10 +129,7 @@ kampfer.events.Event.prototype.fix = function() {
 
 //将event包裹中的对象引用全部清除
 kampfer.events.Event.prototype.dispose = function() {
-	this.src = null;
-	this.target = null;
-	this.currentTarget = null;
-	this.relatedTarget = null;
+	
 };
 
 //判断事件是否为键盘事件
@@ -182,7 +208,9 @@ kampfer.events.addListener = function(elem, eventType, listener, context) {
 
 		if(!events.proxy) {
 			events.proxy = function(e) {
-				kampfer.events.dispatchEvent(e);
+				if(kampfer.events.triggered !== e.type) {
+					return kampfer.events.dispatchEvent(e);
+				}
 			};
 		}
 
@@ -264,22 +292,57 @@ kampfer.events.removeListener = function(elem, eventType, listener) {
  * @param {type}type
  */
 kampfer.events.dispatch = function(elem, eventType) {
-	if(elem.nodeType === 3 || elem.nodeType === 8) {
+	if(elem.nodeType === 3 || elem.nodeType === 8 || !eventType) {
 		return;
 	}
 
-	var events, listeners;
+	var event = new kampfer.events.Event(eventType),
+		args = arguments.splice(2).unshift(event),
+		bubblePath = [],
+		onType = 'on' + eventType;
 
-	for(var cur = elem; cur; cur = cur.parentNode) {
+	//建立冒泡的dom树路径
+	for(var cur = elem; cur; cur.parentNode) {
+		bubblePath.push(cur);
+	}
+	//冒泡的最后一站始终是window对象
+	if( cur === (elem.ownerDocument || document) ) {
+		bubblePath.push(elem.defaultView || elem.parentWindow || window);
+	}
 
-		events = kampfer.data.getDataInternal(cur, 'events');
+	for(var i = 0; cur = bubblePath[i]; i++) {
 
-		if( !events || !(listeners = events.listeners) ) {
+		var eventsObj = kampfer.data.getDataInternal(cur, 'events');
+
+		if( !eventsObj || !events.listeners[eventType] ) {
 			continue;
 		}
 
-		if(listeners[eventType]) {
-			for(var i = 0, listener; listener = listeners[eventType][i]; i++) {
+		// 执行kampfer绑定的事件处理函数
+		var proxy = eventsObj.proxy;
+		proxy.apply(cur, args);
+
+		// 执行使用行内方式绑定的事件处理函数
+		proxy = cur[onType];
+		if(proxy && proxy.apply(cur, args) === false) {
+			event.preventDefault();
+		}
+
+		// 触发浏览器default action
+		if(!event.isDefaultPrevented && !kampfer.isWindow(elem) && elem[eventType]) {
+			var old = elem[onType];
+			if(old) {
+				elem[onType] = null;
+			}
+
+			kampfer.events.triggered = eventType;
+			try {
+				elem[eventType]();
+			} catch(e) {}
+			delete kampfer.events.triggered;
+
+			if(old) {
+				elem[onType] = old;
 			}
 		}
 	}
@@ -287,5 +350,25 @@ kampfer.events.dispatch = function(elem, eventType) {
 
 
 kampfer.events.dispatchEvent = function(event) {
+	event = new kmapfer.events.Event(event);
 
+	var eventsObj = kampfer.data.getDataInternal(event.currentTarget, 'events'),
+		listeners = events.listeners[event.type];
+
+	if(!listeners) {
+		return;
+	}
+
+	for(var i = 0, l; l = listeners[i]; i++) {
+		event.result = l.call(l.context, event);
+		if(event.result === false) {
+			event.preventDefault();
+			event.stopPropagation();
+		}
+		if(event.isImmediatePropagationStopped) {
+			break;
+		}
+	}
+
+	return event.result;
 };
