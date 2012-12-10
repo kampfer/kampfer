@@ -19,7 +19,7 @@ kampfer.provide('events.Listener');
  * - which	{number}	
  * - pageX/pageY	{number}
  */
-kampfer.events.Event = function(src) {
+kampfer.events.Event = function(src, props) {
 	var srcType = kampfer.type(src);
 
 	if(srcType === 'object' && src.type) {
@@ -27,7 +27,10 @@ kampfer.events.Event = function(src) {
 		this.type = src.type;
 	} else if(srcType === 'string') {
 		this.type = src;
-		
+	}
+
+	if(kampfer.type(props) === 'object') {
+		kampfer.extend(event, props);
 	}
 
 	this.isImmediatePropagationStopped = false;
@@ -53,7 +56,7 @@ kampfer.events.Event.prototype = {
 
 	//立即停止冒泡
 	stopImmediatePropagation : function() {
-
+		this.isImmediatePropagationStopped = true;
 	},
 
 	//阻止默认行为
@@ -73,6 +76,23 @@ kampfer.events.Event.prototype = {
 	}
 };
 
+//判断事件是否为键盘事件
+kampfer.events.Event.isKeyEvent = function(type) {
+	if( kampfer.type(type) !== 'string' ) {
+		type = type.type;
+	}
+	var reg = /^key/;
+	return reg.test(type);
+};
+
+//判断事件是否为鼠标事件
+kampfer.events.Event.isMouseEvent = function(type) {
+	if( kampfer.type(type) !== 'string' ) {
+		type = type.type;
+	}
+	var reg = /^(?:mouse|contextmenu)|click/;
+	return reg.test(type);
+};
 
 /*
  * 修复event,处理兼容性问题
@@ -80,7 +100,13 @@ kampfer.events.Event.prototype = {
  * @return {object} 修复的event对象
  */
 kampfer.events.fixEvent = function(event) {
+	var oriEvent = event;
 
+	event = new kampfer.events.Event(oriEvent);
+
+	event.target = oriEvent.target || oriEvent.srcElement;
+
+	return event;
 };
 
 //处理兼容性问题
@@ -125,29 +151,6 @@ kampfer.events.Event.prototype.fix = function() {
 			this.which = ( button & 1 ? 1 : ( button & 2 ? 3 : ( button & 4 ? 2 : 0 ) ) );
 		}
 	}
-};
-
-//将event包裹中的对象引用全部清除
-kampfer.events.Event.prototype.dispose = function() {
-	
-};
-
-//判断事件是否为键盘事件
-kampfer.events.Event.isKeyEvent = function(type) {
-	if( kampfer.type(type) !== 'string' ) {
-		type = type.type;
-	}
-	var reg = /^key/;
-	return reg.test(type);
-};
-
-//判断事件是否为鼠标事件
-kampfer.events.Event.isMouseEvent = function(type) {
-	if( kampfer.type(type) !== 'string' ) {
-		type = type.type;
-	}
-	var reg = /^(?:mouse|contextmenu)|click/;
-	return reg.test(type);
 };
 
 
@@ -203,7 +206,7 @@ kampfer.events.addListener = function(elem, eventType, listener, context) {
 		var events = kampfer.data.getDataInternal(elem, 'events');
 		if(!events) {
 			events = {};
-			kampfer.data.setDataInternal(elem, 'events', elemData);
+			kampfer.data.setDataInternal(elem, 'events', events);
 		}
 
 		if(!events.proxy) {
@@ -216,7 +219,7 @@ kampfer.events.addListener = function(elem, eventType, listener, context) {
 
 		if(elem.addEventListener) {
 			elem.addEventListener(eventType, events.proxy, 'false');
-		} else if(ele.attachEvent) {
+		} else if(elem.attachEvent) {
 			elem.attachEvent('on' + eventType, events.proxy);
 		}
 
@@ -350,10 +353,10 @@ kampfer.events.dispatch = function(elem, eventType) {
 
 
 kampfer.events.dispatchEvent = function(event) {
-	event = new kmapfer.events.Event(event);
+	event = kampfer.events.fixEvent(event);
 
-	var eventsObj = kampfer.data.getDataInternal(event.currentTarget, 'events'),
-		listeners = events.listeners[event.type];
+	var eventsObj = kampfer.data.getDataInternal(event.target, 'events'),
+		listeners = eventsObj && eventsObj.listeners[event.type];
 
 	if(!listeners) {
 		return;

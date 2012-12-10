@@ -32,13 +32,15 @@ kampfer.data.noData = {
  * @return {boolean}
  */
 kampfer.data.acceptData = function(elem) {
-	if( elem.nodeName ) {
-		var match = kampfer.data.noData[ elem.nodeName.toLowerCase() ];
-		if( match ) {
-			return !(match === true || elem.getAttribute('classid') !== match);
+	if(kampfer.type(elem) === 'object') {
+		if(elem.nodeName) {
+			var match = kampfer.data.noData[ elem.nodeName.toLowerCase() ];
+			if( match ) {
+				return !(match === true || elem.getAttribute('classid') !== match);
+			}
 		}
+		return true;
 	}
-	return true;
 };
 
 /*
