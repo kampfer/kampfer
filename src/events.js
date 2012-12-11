@@ -106,6 +106,9 @@ kampfer.events.fixEvent = function(event) {
 
 	event.target = oriEvent.target || oriEvent.srcElement;
 
+	//第一次生成event包裹时，初始化currentTarget为target
+	this.currentTarget = oriEvent.currentTarget || this.target;
+
 	return event;
 };
 
@@ -194,14 +197,14 @@ kampfer.events.addListener = function(elem, eventType, listener, context) {
 	var type = kampfer.type(eventType);
 
 	if( type === 'array' ) {
-		for(var i = 0, e; e = eventType[0]; i++) {
+		for(var i = 0, e; e = eventType[i]; i++) {
 			kampfer.events.addListener(elem, e, listener, context);
 		}
 		return;
 	}
 
 	if( type === 'string') {
-		var listenerObj = new kampfer.events.Listener(listener, eventType, context);
+		var listenerObj = new kampfer.events.Listener(listener, eventType, context || elem);
 
 		var events = kampfer.data.getDataInternal(elem, 'events');
 		if(!events) {
@@ -300,12 +303,13 @@ kampfer.events.dispatch = function(elem, eventType) {
 	}
 
 	var event = new kampfer.events.Event(eventType),
-		args = arguments.splice(2).unshift(event),
+		//args = [].slice.call(arguments, 2).unshift(event),
+		args = [event],
 		bubblePath = [],
 		onType = 'on' + eventType;
 
 	//建立冒泡的dom树路径
-	for(var cur = elem; cur; cur.parentNode) {
+	for(var cur = elem; cur; cur = cur.parentNode) {
 		bubblePath.push(cur);
 	}
 	//冒泡的最后一站始终是window对象
@@ -320,6 +324,9 @@ kampfer.events.dispatch = function(elem, eventType) {
 		if( !eventsObj || !events.listeners[eventType] ) {
 			continue;
 		}
+
+		// 冒泡的每一阶段currentTarget都不同
+		event.currentTarget = cur;
 
 		// 执行kampfer绑定的事件处理函数
 		var proxy = eventsObj.proxy;

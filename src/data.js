@@ -246,7 +246,7 @@ kampfer.data.setDataInternal = function(elem, name, value) {
 
 //kampfer内部调用
 kampfer.data.getDataInternal = function(elem, name) {
-	kampfer.data.getData(elem, name, true);
+	return kampfer.data.getData(elem, name, true);
 };
 
 //kampfer内部调用

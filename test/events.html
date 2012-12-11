@@ -35,19 +35,39 @@
 				return document.getElementById(id);
 			}
 			
-			var p = $('parent_fix'),
-				c = $('child_fix'),
-				o = {foo:1};
-			
-			test('kampfer.events.addListener', function() {
-				kampfer.events.addListener(c, 'click', function() {});
-				kampfer.events.addListener(p, 'click', function() {});
+			test('检查addListener内的data操作', function() {
+				var p = document.createElement('p');
+					o = {foo:1};
+
+				kampfer.events.addListener(p, ['click', 'focus'], function(event) {});
 				kampfer.events.addListener(o, 'click', function() {});
 
-				ok(true);
+				function checkObj(obj) {
+					ok(obj[kampfer.expando], 'check expando');
 
-				console.log(p);
-				console.log(o);
+					var eventsData = kampfer.data.getDataInternal(obj, 'events');
+					ok(eventsData, 'check cache object : events');
+					ok(eventsData.proxy, 'check events.proxy');
+					ok(!kampfer.isEmptyObject(eventsData.listeners), 'events.listeners');
+				}
+
+				checkObj(o);
+				checkObj(p);
+			});
+
+			test('检查addListener对dom操作的有效性', function() {
+				var p = document.createElement('p');
+
+				var triggered = [];
+
+				kampfer.events.addListener(p, ['click', 'focus'], function(event) {
+					triggered.push(event.type);
+				});
+
+				p.click();
+				p.focus();
+
+				ok(triggered.join(' ') === 'click focus', 'p click focus');
 			});
 		</script>
 	</body>
