@@ -423,6 +423,15 @@
 		}
 		return true;
 	};
+
+
+	// 判断对象是否是window对象
+	kampfer.isWindow = function(obj) {
+		if(obj === this.global) {
+			return true;
+		}
+		return false;
+	};
 	
 	
 	/**

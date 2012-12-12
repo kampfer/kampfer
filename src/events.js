@@ -36,6 +36,8 @@ kampfer.events.Event = function(src, props) {
 	this.isImmediatePropagationStopped = false;
 	this.propagationStopped = false;
 	this.isDefaultPrevented = false;
+
+	this[kampfer.expando] = true;
 };
 
 kampfer.events.Event.prototype = {
@@ -102,7 +104,9 @@ kampfer.events.Event.isMouseEvent = function(type) {
 kampfer.events.fixEvent = function(event) {
 	var oriEvent = event;
 
-	event = new kampfer.events.Event(oriEvent);
+	if( event[kampfer.expando] ) {
+		return event;
+	}
 
 	event.target = oriEvent.target || oriEvent.srcElement;
 
@@ -110,50 +114,6 @@ kampfer.events.fixEvent = function(event) {
 	this.currentTarget = oriEvent.currentTarget || this.target;
 
 	return event;
-};
-
-//处理兼容性问题
-kampfer.events.Event.prototype.fix = function() {
-	var src = this.src;
-	
-	this.target = src.target || src.srcElement;
-	//如果target不存在，默认设置为document
-	if(!this.target) {
-		this.target = kampfer.global.document;
-	}
-	
-	//第一次生成event包裹时，初始化currentTarget为target
-	this.currentTarget = this.target;
-	
-	//修复键盘事件
-	if( kampfer.events.Event.isKeyEvent(this.type) ) {
-		if ( this.which == null ) {
-			this.which = src.charCode != null ? src.charCode : src.keyCode;
-		}
-	//修复鼠标事件
-	} else if( kampfer.events.Event.isMouseEvent(this.type) ) {
-		var eventDoc = this.target.ownerDocument || document,
-			doc = eventDoc.documentElement,
-			body = eventDoc.body;
-		
-		//修复坐标
-		if ( this.pageX == null && src.clientX != null ) {
-			this.pageX = src.clientX + ( doc && doc.scrollLeft || body && body.scrollLeft || 0 ) - ( doc && doc.clientLeft || body && body.clientLeft || 0 );
-			this.pageY = src.clientY + ( doc && doc.scrollTop  || body && body.scrollTop  || 0 ) - ( doc && doc.clientTop  || body && body.clientTop  || 0 );
-		}
-
-		// Add relatedTarget, if necessary
-		if ( !this.relatedTarget && src.formElement ) {
-			this.relatedTarget = src.fromElement === this.target ? src.toElement : src.formElement;
-		}
-
-		// Add which for click: 1 === left; 2 === middle; 3 === right
-		// Note: button is not normalized, so don't use it
-		var button = src.button;
-		if ( !this.which && button !== undefined ) {
-			this.which = ( button & 1 ? 1 : ( button & 2 ? 3 : ( button & 4 ? 2 : 0 ) ) );
-		}
-	}
 };
 
 
@@ -302,11 +262,27 @@ kampfer.events.dispatch = function(elem, eventType) {
 		return;
 	}
 
+	var type = kampfer.type(eventType),
+		args = Array.prototype.slice.call(arguments);
+
+	if(type === 'array') {
+		for(var i = 0, e; e = eventType[i]; i++) {
+			args[1] = e;
+			kampfer.events.dispatch.apply(null, args);
+		}
+		return;
+	}
+
+	if(type !== 'string') {
+		return;
+	}
+
 	var event = new kampfer.events.Event(eventType),
-		//args = [].slice.call(arguments, 2).unshift(event),
-		args = [event],
 		bubblePath = [],
 		onType = 'on' + eventType;
+
+	args = Array.prototype.slice.call(arguments, 2);
+	args.unshift(event);
 
 	//建立冒泡的dom树路径
 	for(var cur = elem; cur; cur = cur.parentNode) {
@@ -317,11 +293,11 @@ kampfer.events.dispatch = function(elem, eventType) {
 		bubblePath.push(elem.defaultView || elem.parentWindow || window);
 	}
 
-	for(var i = 0; cur = bubblePath[i]; i++) {
+	for(i = 0; cur = bubblePath[i]; i++) {
 
 		var eventsObj = kampfer.data.getDataInternal(cur, 'events');
 
-		if( !eventsObj || !events.listeners[eventType] ) {
+		if( !eventsObj || !eventsObj.listeners[eventType] ) {
 			continue;
 		}
 
@@ -359,18 +335,22 @@ kampfer.events.dispatch = function(elem, eventType) {
 };
 
 
+/**
+ * 正确的将一个事件派发给所有相关对象
+ */
 kampfer.events.dispatchEvent = function(event) {
 	event = kampfer.events.fixEvent(event);
 
 	var eventsObj = kampfer.data.getDataInternal(event.target, 'events'),
-		listeners = eventsObj && eventsObj.listeners[event.type];
+		listeners = eventsObj && eventsObj.listeners[event.type],
+		args = Array.prototype.slice.call(arguments);
 
 	if(!listeners) {
 		return;
 	}
 
 	for(var i = 0, l; l = listeners[i]; i++) {
-		event.result = l.call(l.context, event);
+		event.result = l.listener.apply(l.context, args);
 		if(event.result === false) {
 			event.preventDefault();
 			event.stopPropagation();

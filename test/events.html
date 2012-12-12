@@ -56,18 +56,17 @@
 			});
 
 			test('检查addListener对dom操作的有效性', function() {
-				var p = document.createElement('p');
+				var input = document.createElement('input');
 
 				var triggered = [];
 
-				kampfer.events.addListener(p, ['click', 'focus'], function(event) {
+				kampfer.events.addListener(input, ['click', 'focus'], function(event) {
 					triggered.push(event.type);
 				});
 
-				p.click();
-				p.focus();
+				kampfer.events.dispatch(input, ['click', 'focus']);
 
-				ok(triggered.join(' ') === 'click focus', 'p click focus');
+				ok(triggered.join(' ') === 'click focus', 'input click focus');
 			});
 		</script>
 	</body>
