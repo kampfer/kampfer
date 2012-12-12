@@ -21,11 +21,6 @@
 		<div id="qunit-testrunner-toolbar"></div>
 		<h2 id="qunit-userAgent"></h2>
 		<ol id="qunit-tests"></ol>
-		<div>
-			<div id="parent_fix">
-				<div id="child_fix">child</div>
-			</div>
-		</div>
 		<!--	共用文件，不要修改	end	-->
 
 		<script type="text/javascript">
@@ -34,39 +29,59 @@
 			function $(id) {
 				return document.getElementById(id);
 			}
-			
-			test('检查addListener内的data操作', function() {
-				var p = document.createElement('p');
-					o = {foo:1};
 
-				kampfer.events.addListener(p, ['click', 'focus'], function(event) {});
-				kampfer.events.addListener(o, 'click', function() {});
-
-				function checkObj(obj) {
-					ok(obj[kampfer.expando], 'check expando');
-
-					var eventsData = kampfer.data.getDataInternal(obj, 'events');
-					ok(eventsData, 'check cache object : events');
-					ok(eventsData.proxy, 'check events.proxy');
-					ok(!kampfer.isEmptyObject(eventsData.listeners), 'events.listeners');
-				}
-
-				checkObj(o);
-				checkObj(p);
-			});
-
-			test('检查addListener对dom操作的有效性', function() {
+			test('addListener有效性检查', function() {
 				var input = document.createElement('input');
 
 				var triggered = [];
 
+				kampfer.events.addListener(input, 'dbclick', function(event) {
+					triggered.push(event.type);
+				});
 				kampfer.events.addListener(input, ['click', 'focus'], function(event) {
 					triggered.push(event.type);
 				});
 
+				kampfer.events.dispatch(input, 'dbclick');
 				kampfer.events.dispatch(input, ['click', 'focus']);
 
-				ok(triggered.join(' ') === 'click focus', 'input click focus');
+				ok(triggered.join('->') === 'dbclick->click->focus', 'input dbclick->click->focus');
+			});
+
+			test('addListener data 操作检查', function() {
+				var div = document.createElement('div');
+					obj = {foo:1};
+
+				function check(obj) {
+					ok(!obj[kampfer.expando], '初始状态expando不存在');
+
+					var handler = function() {};
+					kampfer.events.addListener(obj, 'click', handler);
+
+					ok(obj[kampfer.expando], '绑定事件生成expando');
+
+					var events = kampfer.data.getDataInternal(obj, 'events');
+					ok(events, '绑定事件生成了events cache对象');
+					ok(events.proxy, 'events.proxy存在');
+					ok(events.listeners, 'events.listeners');
+					ok(events.listeners.click[0].listener === handler, 'handler被绑定');
+				}
+
+				check(div);
+				check(obj);
+			});
+
+			test('dispatch 额外参数传递检查', function() {
+				var div = document.createElement('div');
+				var bar = {};
+
+				kampfer.events.addListener(div, 'click', function(event) {
+					ok(arguments[1] === 'foo', 'foo');
+					ok(arguments[2] === 'baz', 'baz');
+					ok(arguments[3] === bar, 'bar');
+				});
+
+				kampfer.events.dispatch(div, 'click', 'foo', 'baz', bar);
 			});
 		</script>
 	</body>

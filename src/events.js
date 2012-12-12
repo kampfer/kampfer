@@ -175,7 +175,7 @@ kampfer.events.addListener = function(elem, eventType, listener, context) {
 		if(!events.proxy) {
 			events.proxy = function(e) {
 				if(kampfer.events.triggered !== e.type) {
-					return kampfer.events.dispatchEvent(e);
+					return kampfer.events.dispatchEvent.apply(this, arguments);
 				}
 			};
 		}
@@ -286,7 +286,7 @@ kampfer.events.dispatch = function(elem, eventType) {
 	args.unshift(event);
 
 	// event.target始终指向事件的起点对象
-	if(event.target) {
+	if(!event.target) {
 		event.target = elem;
 	}
 
