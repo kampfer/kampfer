@@ -265,6 +265,7 @@ kampfer.events.dispatch = function(elem, eventType) {
 	var type = kampfer.type(eventType),
 		args = Array.prototype.slice.call(arguments);
 
+	//一次触发多个事件
 	if(type === 'array') {
 		for(var i = 0, e; e = eventType[i]; i++) {
 			args[1] = e;
@@ -283,6 +284,11 @@ kampfer.events.dispatch = function(elem, eventType) {
 
 	args = Array.prototype.slice.call(arguments, 2);
 	args.unshift(event);
+
+	// event.target始终指向事件的起点对象
+	if(event.target) {
+		event.target = elem;
+	}
 
 	//建立冒泡的dom树路径
 	for(var cur = elem; cur; cur = cur.parentNode) {
@@ -341,7 +347,8 @@ kampfer.events.dispatch = function(elem, eventType) {
 kampfer.events.dispatchEvent = function(event) {
 	event = kampfer.events.fixEvent(event);
 
-	var eventsObj = kampfer.data.getDataInternal(event.target, 'events'),
+	// ie6/7/8不支持event.currentTarget 于是无法使用解决this的问题
+	var eventsObj = kampfer.data.getDataInternal(event.currentTarget, 'events'),
 		listeners = eventsObj && eventsObj.listeners[event.type],
 		args = Array.prototype.slice.call(arguments);
 
