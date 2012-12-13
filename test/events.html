@@ -71,7 +71,7 @@
 				check(obj);
 			});
 
-			test('dispatch 额外参数传递检查', function() {
+			test('dispatch 自定义参数传递检查', function() {
 				var div = document.createElement('div');
 				var bar = {};
 
@@ -82,6 +82,56 @@
 				});
 
 				kampfer.events.dispatch(div, 'click', 'foo', 'baz', bar);
+			});
+
+			test('dispatch event检查', function() {
+				var div = document.createElement('div');
+				var obj = {};
+				var eventType = 'click';
+
+				var check = function(event) {
+					equal(event.type, eventType, 'event.type check');
+				};
+
+				kampfer.events.addListener(div, eventType, function(event) {
+					check(event);
+					strictEqual(event.target, div, 'event.targt check');
+					strictEqual(event.currentTarget, div, 'event.currentTarge check');
+				});
+				kampfer.events.addListener(obj, eventType, function(event) {
+					check(event);
+					strictEqual(event.target, obj, 'event.targt check');
+					strictEqual(event.currentTarget, obj, 'event.currentTarge check');
+				});
+
+				kampfer.events.dispatch(div, 'click');
+				kampfer.events.dispatch(obj, 'click');
+			});
+
+			test('dispatch this检查', function() {
+				var div = document.createElement('div');
+
+				kampfer.events.addListener(div, 'click', function(event) {
+					strictEqual(this, div, 'this check');
+				});
+
+				kampfer.events.dispatch(div, 'click');
+			});
+
+			//chrome firefox通过, ie8无法通过
+			test('通过elem[type]触发addEventListener/attachEvent绑定的事件', function() {
+				var div = document.createElement('div');
+				var handler = function() {
+					ok(true, 'div.click() checked!');
+				};
+
+				if(div.addEventListener) {
+					div.addEventListener('click', handler, false);
+				} else if(div.attachEvent) {
+					div.attachEvent('onclick', handler, false);
+				}
+
+				div.click();
 			});
 		</script>
 	</body>

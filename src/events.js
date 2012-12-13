@@ -175,7 +175,7 @@ kampfer.events.addListener = function(elem, eventType, listener, context) {
 		if(!events.proxy) {
 			events.proxy = function(e) {
 				if(kampfer.events.triggered !== e.type) {
-					return kampfer.events.dispatchEvent.apply(this, arguments);
+					return kampfer.events.dispatchEvent.apply(null, arguments);
 				}
 			};
 		}
