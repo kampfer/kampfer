@@ -90,6 +90,7 @@
 				var eventType = 'click';
 
 				var check = function(event) {
+					ok(event[kampfer.expando], 'event fixed');
 					equal(event.type, eventType, 'event.type check');
 				};
 
@@ -119,7 +120,7 @@
 			});
 
 			//chrome firefox通过, ie8无法通过
-			test('通过elem[type]触发addEventListener/attachEvent绑定的事件', function() {
+			test('通过elem.click()触发addEventListener/attachEvent绑定的click事件', function() {
 				var div = document.createElement('div');
 				var handler = function() {
 					ok(true, 'div.click() checked!');
