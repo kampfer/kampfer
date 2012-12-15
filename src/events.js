@@ -174,14 +174,14 @@ kampfer.events.addListener = function(elem, eventType, listener, context) {
 		if(!events.proxy) {
 			events.proxy = function(e) {
 				if(kampfer.events.triggered !== e.type) {
-					return kampfer.events.dispatchEvent.apply(arguments.callee.elem, arguments);
+					return kampfer.events.dispatchEvent.apply(events.proxy.elem, arguments);
 				}
 			};
 			events.proxy.elem = elem;
 		}
 
 		if(elem.addEventListener) {
-			elem.addEventListener(eventType, events.proxy, 'false');
+			elem.addEventListener(eventType, events.proxy, false);
 		} else if(elem.attachEvent) {
 			elem.attachEvent('on' + eventType, events.proxy);
 		}
