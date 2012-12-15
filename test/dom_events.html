@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<title>test dom events</title>
+		<style type="text/css">
+			#p,#c{width:100px;height:100px;}
+			#p{padding:100px;background-color:blue;margin-top:20px;}
+			#c{background-color:red;}
+		</style>
+		<!--	共用文件，不要修改	start	-->
+		<link href="qunit/qunit/qunit.css" rel="stylesheet" type="text/css" />
+		<script type="text/javascript" src="../src/base.js"></script>
+		<script type="text/javascript" src="qunit/qunit/qunit.js"></script>
+		<!--	共用文件，不要修改	end	-->
+		<script type="text/javascript">
+			QUnit.config.reorder = false;
+			kampfer.require('events');
+		</script>
+	</head>
+	<body>
+		<!--	共用文件，不要修改	start	-->
+		<h1 id="qunit-header">QUnit for events</h1>
+		<h2 id="qunit-banner"></h2>
+		<div id="qunit-testrunner-toolbar"></div>
+		<h2 id="qunit-userAgent"></h2>
+		<ol id="qunit-tests"></ol>
+		<!--	共用文件，不要修改	end	-->
+		<div id="p">
+			<div id="c">点击此处开始测试</div>
+		<div>
+		<script type="text/javascript">
+			var p = document.getElementById('p');
+			var c = document.getElementById('c');
+
+			function clearEvent() {
+				kampfer.events.removeListener(p);
+				kampfer.events.removeListener(c);
+			}
+
+			asyncTest('addListener : 单个listener', function() {
+				clearEvent();
+				
+				kampfer.events.addListener(c, 'click', function() {
+					ok(true, 'click');
+					start();
+				});
+			});
+
+			asyncTest('check this and event', function() {
+				clearEvent();
+
+				kampfer.events.addListener(c, 'click', function(event) {
+					strictEqual(this, c, 'this checked');
+
+					ok(event[kampfer.expando], 'event.expando checked');
+					strictEqual(event.type, 'click', 'event.type checked');
+					strictEqual(event.target, c, 'event.target checked');
+					strictEqual(event.currentTarget, c, 'event.currentTarget checked');
+					ok(event.pageX && event.pageY, 'event.pageX and event.pageY checked');
+					ok(event.preventDefault, 'event.preventDefault checked');
+					ok(event.stopPropagation, 'event.stopPropagation checked');
+					ok(event.stopImmediatePropagation, 'event.stopImmediatePropagation checked');
+					ok(event.dispose, 'event.dispose checked');
+					ok(event.which, 'event.which checked');
+				});
+
+				kampfer.events.addListener(p, 'click', function(event) {
+					strictEqual(this, p, 'this checked');
+
+					strictEqual(event.currentTarget, p, 'event.currentTarget checked');
+
+					start();
+				});
+			});
+
+			asyncTest('removeListener', function() {
+				clearEvent();
+
+				//删除同一事件的单个listener
+				var count = 0;
+				var handler = function() {
+					equal(++count, 1, '1');
+				};
+				var handler2 = function() {
+					equal(++count, 2, '2');
+					start();
+				};
+				kampfer.events.addListener(p, 'click', handler);
+				kampfer.events.addListener(p, 'click', handler2);
+				//删除同一事件的所有listener
+				//删除不同事件的相同listener
+				//删除不同事件的所有listener
+				//删除所有事件
+			});
+
+			test('clear elem listeners', function() {
+				ok(true);
+			});
+
+			test('bubble', function() {
+				ok(true);
+			});
+
+			test('preventDefault', function() {
+				ok(true);
+			});
+
+			test('stopImmediatePropagation', function() {
+				ok(true);
+			});
+
+			test('custom events', function() {
+				ok(true);
+			});
+		</script>
+	</body>
+</html>
