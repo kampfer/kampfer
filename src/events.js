@@ -106,12 +106,11 @@ kampfer.events.fixEvent = function(event) {
 
 	if( event[kampfer.expando] ) {
 		return event;
+	} else {
+		event = new kampfer.events.Event(oriEvent);
 	}
 
 	event.target = oriEvent.target || oriEvent.srcElement;
-
-	//第一次生成event包裹时，初始化currentTarget为target
-	this.currentTarget = oriEvent.currentTarget || this.target;
 
 	return event;
 };
@@ -175,9 +174,10 @@ kampfer.events.addListener = function(elem, eventType, listener, context) {
 		if(!events.proxy) {
 			events.proxy = function(e) {
 				if(kampfer.events.triggered !== e.type) {
-					return kampfer.events.dispatchEvent.apply(null, arguments);
+					return kampfer.events.dispatchEvent.apply(arguments.callee.elem, arguments);
 				}
 			};
+			events.proxy.elem = elem;
 		}
 
 		if(elem.addEventListener) {
@@ -195,6 +195,9 @@ kampfer.events.addListener = function(elem, eventType, listener, context) {
 		}
 		events.listeners[eventType].push(listenerObj);
 	}
+
+	// fix ie memory leak
+	elem = null;
 };
 
 
@@ -204,9 +207,9 @@ kampfer.events.addListener = function(elem, eventType, listener, context) {
  * @param {string}eventType
  */ 
 kampfer.events.removeListener = function(elem, eventType, listener) {
-	var events = kampfer.data.getDataInternal(elem);
+	var events = kampfer.data.getDataInternal(elem, 'events');
 
-	if( !events || events.listeners || !events.listeners[eventType]  ) {
+	if( !events || !events.listeners || !events.listeners[eventType]  ) {
 		return;
 	}
 
@@ -228,8 +231,9 @@ kampfer.events.removeListener = function(elem, eventType, listener) {
 
 	if(type === 'string') {
 		for(var i = 0, l; l = events.listeners[eventType][i]; i++) {
-			if(l.eventType === eventType && l.listener === listener) {
-				events.listeners[eventType].splice(i, 1);
+			if( !listener || (l.eventType === eventType && l.listener === listener) ) {
+				// 注意splice会改变数组长度以及元素对应的下标
+				events.listeners[eventType].splice(i--, 1);
 			}
 		}
 
@@ -348,13 +352,15 @@ kampfer.events.dispatchEvent = function(event) {
 	event = kampfer.events.fixEvent(event);
 
 	// ie6/7/8不支持event.currentTarget 于是无法使用解决this的问题
-	var eventsObj = kampfer.data.getDataInternal(event.currentTarget, 'events'),
+	var eventsObj = kampfer.data.getDataInternal(this, 'events'),
 		listeners = eventsObj && eventsObj.listeners[event.type],
 		args = Array.prototype.slice.call(arguments);
 
 	if(!listeners) {
 		return;
 	}
+
+	event.currentTarget = this;
 
 	for(var i = 0, l; l = listeners[i]; i++) {
 		event.result = l.listener.apply(l.context, args);
