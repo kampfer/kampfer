@@ -2,15 +2,20 @@ kampfer.provide('Class');
 
 kampfer.Class = function() {};
 
+kampfer.Class.initializing = false;
+
 kampfer.Class.extend = function(props) {
 	var Class = function() {
-		if(this.initializer) {
+		if(!kampfer.Class.initializing && this.initializer) {
 			this.initializer.apply(this, arguments);			
 		}
 	};
 
-	//var prototype = this.prototype;
+	kampfer.Class.initializing = true;
+	// this === 构造函数。
+	//能否直接使用this.prototype考虑使用this.prototype。
 	var prototype = new this();
+	kampfer.Class.initializing = false;
 
 	prototype = kampfer.extend(prototype, props);
 
@@ -18,7 +23,7 @@ kampfer.Class.extend = function(props) {
 
 	Class.prototype.constructor = Class;
 
-	Class.superClass = this;
+	Class.superClass = this.prototype;
 
 	Class.extend = kampfer.Class.extend;
 

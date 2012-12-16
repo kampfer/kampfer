@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-		<title>test template</title>
+		<title>test Class</title>
 		<!--	共用文件，不要修改	start	-->
 		<link href="qunit/qunit/qunit.css" rel="stylesheet" type="text/css" />
 		<script type="text/javascript" src="../src/base.js"></script>
@@ -36,52 +36,139 @@
 				},
 				getSex : function() {
 					return this.sex;
+				},
+				say : function() {
+					return 'Hi! I am ' + this.getName();
 				}
 			});
 
 			var Man = Person.extend({
 				initializer : function(name, job) {
-					Person.prototype.initializer.call(this, 'male', name);
-					this.job = 'job';
+					Man.superClass.initializer.call(this, 'male', name);
+					this.job = job;
 				},
-				say : function() {
-					return this.getName() + ' say : hi!';
+				work : function() {
+					return 'working';
 				}
 			});
 
 			var Student = Man.extend({
 				initializer : function(name) {
-					Man.prototype.initializer.call(this, name, 'student');
+					Student.superClass.initializer.call(this, name, 'student');
 				},
-				say : function() {
-					var word = Man.superClass.constructor.call(this);
-					return '\nI am a ' + this.job;
+				learn : function() {
+					return 'learning'
 				}
 			});
 
+			function checkPerson(obj) {
+				ok(obj.hasOwnProperty('name'), 'name in instance : checked');
+				ok(obj.hasOwnProperty('sex'), 'sex in instance : checked');
+				ok(!obj.hasOwnProperty('getName') && 'getName' in obj, 'getName in prototype : checked');
+				ok(!obj.hasOwnProperty('getSex') && 'getSex' in obj, 'getSex in prototype : checked');
+				ok(!obj.hasOwnProperty('say') && 'say' in obj, 'say in prototype : checked');
+
+				ok(obj instanceof kampfer.Class, 'instanceof Class : checked');
+				ok(obj instanceof Person, 'instanceof Person : checked');
+			}
+
+			function isMethodInPrototype(methodName, instance) {
+				return !instance.hasOwnProperty(methodName) && methodName in instance;
+			}
+
 			test('新建类', function() {
 				var lw = new Person('male', 'lw');
+				var k = new Person('female', 'kampfer');
 
-				equal(lw.name, 'lw', 'name checked');
-				equal(lw.sex, 'male', 'sex checked');
-				equal(lw.getName(), lw.name, 'getName checked');
-				equal(lw.getSex(), lw.sex, 'getSex checked');
-				ok(lw instanceof Person, '对象是类的实例');
-				ok(Person.prototype.isPrototypeOf(lw), '类的原型在对象的原型链中');
+				checkPerson(lw);
+				checkPerson(k);
+
+				//验证initializer是否正常执行
+				equal(lw.name, 'lw', 'name value : checked');
+				equal(lw.sex, 'male', 'sex value : checked');
+				equal(lw.getName(), lw.name, 'getName return value : checked');
+				equal(lw.getSex(), lw.sex, 'getSex return value : checked');
+				equal(lw.say(), 'Hi! I am lw', 'say return value : checked');
+
+				strictEqual(lw.say, k.say, 'say函数复用');
+				strictEqual(lw.getName, k.getName, 'getName函数复用');
+				strictEqual(lw.getSex, k.getSex, 'getSex函数复用');
 			});
 
 			test('继承类', function() {
-				var lw = new Man('lw');
+				var lw = new Man('lw', 'engineer');
+				var lw2 = new Student('lw');
 
-				equal(lw.getName(), 'lw');
-				equal(lw.getSex(), 'male');
-				equal(lw.say(), 'lw say : hi!');
-				ok(lw instanceof Man, 'name checked');
-				ok(lw instanceof Person, 'name checked');
+				ok(lw instanceof Man, 'instanceof Man : checked');
+				ok(lw.hasOwnProperty('job') && !!lw.job, 'job : checked');
+				ok(!lw.hasOwnProperty('work') && 'work' in lw, 'work in prototype : checked');
+				ok(lw2 instanceof Man, 'instanceof Man : checked');
+				ok(lw2.hasOwnProperty('job') && !!lw2.job, 'job : checked');
+				ok(!lw2.hasOwnProperty('learn') && 'learn' in lw2, 'say in prototype : checked');
+
+				checkPerson(lw);
+				checkPerson(lw2);
+
+				ok(!('name' in Man.prototype), '在原型中没有多余的属性');
 			});
 
-			test('父方法', function() {
-				ok(true);
+			test('不使用超类的初始化程序', function() {
+				var Woman = Person.extend({
+					//完全重新定义初始化程序
+					initializer : function(name, age) {
+						this.name = name;
+						this.age = age;
+						this.sex = 'female';
+					},
+					getAge : function() {
+						return this.age;
+					}
+				});
+
+				var july = new Woman('july', 16);
+
+				checkPerson(july);
+
+				ok( july.age === 16, 'age value : checked');
+				ok( isMethodInPrototype('getAge', july), 'getAge in prototype : checked');
+			});
+
+			test('不传递初始化程序', function() {
+				var Star = Person.extend({
+					sing : function() {
+						return 'singing';
+					}
+				});
+
+				//不传递初始化程序，就默认使用超类的初始化程序
+				var july = new Star('female', 'july');
+
+				checkPerson(july);
+			});
+
+			test('使用空的初始化程序', function() {
+				var Person2 = Person.extend({
+					initializer : function() {},
+					setName : function(name) {
+						this.name = name;
+					},
+					setSex : function(sex) {
+						this.sex = sex;
+					}
+				});
+
+				var lw = new Person2('male', 'lw');
+
+				ok( !('name' in lw), 'name is not in instance : checked');
+				ok( !('sex' in lw), 'name is not in instance : checked');
+				ok(!lw.hasOwnProperty('getName') && 'getName' in lw, 'getName in prototype : checked');
+				ok(!lw.hasOwnProperty('getSex') && 'getSex' in lw, 'getSex in prototype : checked');
+				ok(!lw.hasOwnProperty('say') && 'say' in lw, 'say in prototype : checked');
+
+				lw.setName('lw');
+				lw.setSex('male');
+				ok(lw.hasOwnProperty('name'), 'name in instance : checked');
+				ok(lw.hasOwnProperty('sex'), 'sex in instance : checked');
 			});
 		</script>
 	</body>
