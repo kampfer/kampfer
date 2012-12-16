@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<title>test template</title>
+		<!--	共用文件，不要修改	start	-->
+		<link href="qunit/qunit/qunit.css" rel="stylesheet" type="text/css" />
+		<script type="text/javascript" src="../src/base.js"></script>
+		<script type="text/javascript" src="qunit/qunit/qunit.js"></script>
+		<!--	共用文件，不要修改	end	-->
+		<script type="text/javascript">
+			QUnit.config.reorder = false;
+			kampfer.require('Class');
+		</script>
+	</head>
+	<body>
+		<!--	共用文件，不要修改	start	-->
+		<h1 id="qunit-header">QUnit for test</h1>
+		<h2 id="qunit-banner"></h2>
+		<div id="qunit-testrunner-toolbar"></div>
+		<h2 id="qunit-userAgent"></h2>
+		<ol id="qunit-tests"></ol>
+		<div id="qunit-fixture">
+			test markup, will be hidden
+		</div>
+		<!--	共用文件，不要修改	end	-->
+		<script type="text/javascript">
+			var Person = kampfer.Class.extend({
+				initializer : function(sex, name) {
+					this.sex = sex;
+					this.name = name;
+				},
+				getName : function() {
+					return this.name;
+				},
+				getSex : function() {
+					return this.sex;
+				}
+			});
+
+			var Man = Person.extend({
+				initializer : function(name, job) {
+					Person.prototype.initializer.call(this, 'male', name);
+					this.job = 'job';
+				},
+				say : function() {
+					return this.getName() + ' say : hi!';
+				}
+			});
+
+			var Student = Man.extend({
+				initializer : function(name) {
+					Man.prototype.initializer.call(this, name, 'student');
+				},
+				say : function() {
+					var word = Man.superClass.constructor.call(this);
+					return '\nI am a ' + this.job;
+				}
+			});
+
+			test('新建类', function() {
+				var lw = new Person('male', 'lw');
+
+				equal(lw.name, 'lw', 'name checked');
+				equal(lw.sex, 'male', 'sex checked');
+				equal(lw.getName(), lw.name, 'getName checked');
+				equal(lw.getSex(), lw.sex, 'getSex checked');
+				ok(lw instanceof Person, '对象是类的实例');
+				ok(Person.prototype.isPrototypeOf(lw), '类的原型在对象的原型链中');
+			});
+
+			test('继承类', function() {
+				var lw = new Man('lw');
+
+				equal(lw.getName(), 'lw');
+				equal(lw.getSex(), 'male');
+				equal(lw.say(), 'lw say : hi!');
+				ok(lw instanceof Man, 'name checked');
+				ok(lw instanceof Person, 'name checked');
+			});
+
+			test('父方法', function() {
+				ok(true);
+			});
+		</script>
+	</body>
+</html>
