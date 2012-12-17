@@ -57,7 +57,7 @@
 					Student.superClass.initializer.call(this, name, 'student');
 				},
 				learn : function() {
-					return 'learning'
+					return 'learning';
 				}
 			});
 
@@ -78,10 +78,7 @@
 
 			test('新建类', function() {
 				var lw = new Person('male', 'lw');
-				var k = new Person('female', 'kampfer');
-
 				checkPerson(lw);
-				checkPerson(k);
 
 				//验证initializer是否正常执行
 				equal(lw.name, 'lw', 'name value : checked');
@@ -90,6 +87,10 @@
 				equal(lw.getSex(), lw.sex, 'getSex return value : checked');
 				equal(lw.say(), 'Hi! I am lw', 'say return value : checked');
 
+				//实例之间不共享属性但共享方法
+				var k = new Person('female', 'kampfer');
+				equal(k.name, 'kampfer', 'name value : checked');
+				equal(k.sex, 'female', 'sex value : checked');
 				strictEqual(lw.say, k.say, 'say函数复用');
 				strictEqual(lw.getName, k.getName, 'getName函数复用');
 				strictEqual(lw.getSex, k.getSex, 'getSex函数复用');
@@ -97,19 +98,27 @@
 
 			test('继承类', function() {
 				var lw = new Man('lw', 'engineer');
-				var lw2 = new Student('lw');
-
+				checkPerson(lw);
 				ok(lw instanceof Man, 'instanceof Man : checked');
 				ok(lw.hasOwnProperty('job') && !!lw.job, 'job : checked');
 				ok(!lw.hasOwnProperty('work') && 'work' in lw, 'work in prototype : checked');
+				
+				var lw2 = new Student('lw');
+				ok(lw2 instanceof Student, 'instanceof Student : checked');
 				ok(lw2 instanceof Man, 'instanceof Man : checked');
-				ok(lw2.hasOwnProperty('job') && !!lw2.job, 'job : checked');
-				ok(!lw2.hasOwnProperty('learn') && 'learn' in lw2, 'say in prototype : checked');
-
-				checkPerson(lw);
+				//继承自Person的方法和属性
 				checkPerson(lw2);
-
-				ok(!('name' in Man.prototype), '在原型中没有多余的属性');
+				//继承自Man的方法和属性
+				ok(lw2.hasOwnProperty('job') && !!lw2.job, 'job : checked');
+				ok(!lw2.hasOwnProperty('work') && 'work' in lw2, 'work in prototype : checked');
+				//实例的方法
+				ok(!lw2.hasOwnProperty('learn') && 'learn' in lw2, 'say in prototype : checked');
+				
+				//原型不会被对象属性污染
+				ok(!('name' in Man.prototype), 'name not in Man.prototype : checked');
+				ok(!('sex' in Man.prototype), 'sex not in Man.prototype : checked');
+				ok(!('name' in Student.prototype), 'name not in Student.prototype : checked');
+				ok(!('sex' in Student.prototype), 'sex not in Student.prototype : checked');
 			});
 
 			test('不使用超类的初始化程序', function() {
@@ -144,6 +153,10 @@
 				var july = new Star('female', 'july');
 
 				checkPerson(july);
+
+				equal(july.name, 'july', 'name value : checked');
+				equal(july.sex, 'female', 'sex value : checked');
+				ok( isMethodInPrototype('sing', july), 'sing in prototype : checked');
 			});
 
 			test('使用空的初始化程序', function() {
