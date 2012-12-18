@@ -40,8 +40,6 @@
 			}
 
 			asyncTest('addListener : 单个listener', function() {
-				//clearEvent();
-
 				kampfer.events.addListener(c, 'click', function() {
 					ok(true, 'click');
 					start();

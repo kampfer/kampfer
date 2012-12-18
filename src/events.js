@@ -209,7 +209,7 @@ kampfer.events.addListener = function(elem, eventType, listener, context) {
 kampfer.events.removeListener = function(elem, eventType, listener) {
 	var events = kampfer.data.getDataInternal(elem, 'events');
 
-	if( !events || !events.listeners || !events.listeners[eventType]  ) {
+	if( !events || !events.listeners ) {
 		return;
 	}
 
@@ -223,7 +223,7 @@ kampfer.events.removeListener = function(elem, eventType, listener) {
 	}
 
 	if(type === 'undefined') {
-		for(type in events) {
+		for(type in events.listeners) {
 			kampfer.events.removeListener(elem, type, listener);
 		}
 		return;
