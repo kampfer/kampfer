@@ -59,6 +59,7 @@ kampfer.events.Event.prototype = {
 	//立即停止冒泡
 	stopImmediatePropagation : function() {
 		this.isImmediatePropagationStopped = true;
+		this.stopPropagation();
 	},
 
 	//阻止默认行为

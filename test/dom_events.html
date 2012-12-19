@@ -27,7 +27,7 @@
 		<h2 id="qunit-userAgent"></h2>
 		<ol id="qunit-tests"></ol>
 		<!--	共用文件，不要修改	end	-->
-		<div id="p">
+		<div id="p" style="position:absolute;right:0;top:0;">
 			<div id="c">
 				<a href="http://www.google.com" target="_blank" id="a">点击此处开始测试</a>
 			</div>
@@ -42,11 +42,76 @@
 				kampfer.events.removeListener(c);
 			}
 
-			asyncTest('addListener : 单个listener', function() {
+			/**/
+			asyncTest('addListener : 绑定一个事件', function() {
+				clearEvent();
+
 				kampfer.events.addListener(c, 'click', function() {
-					ok(true, 'click');
+					ok(true, 'checked');
 					start();
 				});
+			});
+
+			asyncTest('addListener : 绑定多个事件', function() {
+				clearEvent();
+
+				var events = [];
+				kampfer.events.addListener(c, ['mousedown', 'mouseup'], function(event) {
+					events.push(event.type);
+					if(events.length > 1) {
+						equal(events.join(' '), 'mousedown mouseup', 'mousedown mouseup : checked');
+						start();
+					}
+				});
+			});
+
+			asyncTest('addListener : 重复绑定事件', function() {
+				clearEvent();
+
+				var triggerCount = 0;
+				kampfer.events.addListener(c, ['click', 'click'], function() {
+					triggerCount++;
+					if(triggerCount > 1) {
+						equal(triggerCount, 2, '2 click : checked');
+					}
+				});
+				kampfer.events.addListener(c, 'click', function() {
+					triggerCount++;
+					equal(triggerCount, 3, '3 click : checked');
+					start();
+				});
+			});
+
+			test('check addListener internal operation', function() {
+				var eventsObj = kampfer.data.getDataInternal(c, 'events');
+				ok(eventsObj, 'events cache object : checked');
+				ok(eventsObj.proxy, 'events.proxy : checked');
+				ok(eventsObj.listeners.length, 'events.listeners.length > 0 : checked');
+			});
+
+			asyncTest('removeListener', function() {
+				clearEvent();
+
+				//删除同一事件的单个listener
+				var count = 0;
+				var handler = function() {
+					equal(++count, 1, '1');
+				};
+				var handler2 = function() {
+					equal(++count, 2, '2');
+					start();
+				};
+				kampfer.events.addListener(p, 'click', handler);
+				kampfer.events.addListener(p, 'click', handler2);
+				//删除同一事件的所有listener
+				//删除不同事件的相同listener
+				//删除不同事件的所有listener
+				//删除所有事件
+			});
+
+			test('clear elem listeners', function() {
+				clearEvent();
+				ok(true);
 			});
 
 			asyncTest('check this and event', function() {
@@ -76,32 +141,7 @@
 				});
 			});
 
-			asyncTest('removeListener', function() {
-				clearEvent();
-
-				//删除同一事件的单个listener
-				var count = 0;
-				var handler = function() {
-					equal(++count, 1, '1');
-				};
-				var handler2 = function() {
-					equal(++count, 2, '2');
-					start();
-				};
-				kampfer.events.addListener(p, 'click', handler);
-				kampfer.events.addListener(p, 'click', handler2);
-				//删除同一事件的所有listener
-				//删除不同事件的相同listener
-				//删除不同事件的所有listener
-				//删除所有事件
-			});
-
-			test('clear elem listeners', function() {
-				clearEvent();
-				ok(true);
-			});
-
-			asyncTest('bubble', 1, function() {
+			asyncTest('bubble', function() {
 				clearEvent();
 
 				var path = [];
@@ -115,7 +155,7 @@
 				});
 			});
 
-			asyncTest('preventDefault', 1, function() {
+			asyncTest('preventDefault', function() {
 				clearEvent();
 				kampfer.events.addListener(a, 'click', function(event) {
 					event.preventDefault();
@@ -136,12 +176,22 @@
 				});
 			});
 
-			test('stopImmediatePropagation', function() {
+			asyncTest('stopImmediatePropagation', function() {
 				clearEvent();
-				ok(true);
+				kampfer.events.addListener(p, 'click', function() {
+					throw 'Propagation is not stoped';
+				});
+				kampfer.events.addListener(c, 'click', function(event) {
+					event.stopImmediatePropagation();
+					ok(true);
+					start();
+				});
+				kampfer.events.addListener(c, 'click', function(event) {
+					throw 'ImmediatePropagation is not stoped';
+				});
 			});
 
-			test('custom events', function() {
+			test('trigger defaultAction', function() {
 				clearEvent();
 				ok(true);
 			});
