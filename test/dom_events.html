@@ -83,10 +83,27 @@
 			});
 
 			test('check addListener internal operation', function() {
-				var eventsObj = kampfer.data.getDataInternal(c, 'events');
-				ok(eventsObj, 'events cache object : checked');
-				ok(eventsObj.proxy, 'events.proxy : checked');
-				ok(eventsObj.listeners.length, 'events.listeners.length > 0 : checked');
+				clearEvent();
+
+				function checkCache(elem) {
+					var eventsObj = kampfer.data.getDataInternal(c, 'events');
+					if(eventsObj) {
+						ok(eventsObj, 'events cache object : checked');
+						ok(eventsObj.proxy, 'events.proxy : checked');
+						ok(eventsObj.listeners, 'events.listeners : checked');
+					} else {
+						ok(true, 'cache object undefined : checked');
+					}
+					return eventsObj;
+				}
+				
+				checkCache(c);
+
+				var fn = function() {};
+				kampfer.events.addListener(c, 'click', fn);
+
+				var eventsObj = checkCache(c);
+				strictEqual(eventsObj.listeners.click[0].listener, fn, 'listener : checked');
 			});
 
 			asyncTest('removeListener', function() {
