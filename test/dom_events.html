@@ -106,24 +106,44 @@
 				strictEqual(eventsObj.listeners.click[0].listener, fn, 'listener : checked');
 			});
 
-			asyncTest('removeListener', function() {
+			asyncTest('removeListener one listener', function() {
 				clearEvent();
 
 				//删除同一事件的单个listener
 				var count = 0;
-				var handler = function() {
-					equal(++count, 1, '1');
+				var add = function() {
+					count++;
 				};
-				var handler2 = function() {
-					equal(++count, 2, '2');
+				var add2 = function() {
+					count += 2;
+				};
+				kampfer.events.addListener(p, 'click', add);
+				kampfer.events.addListener(p, 'click', add2);
+				kampfer.events.removeListener(p, 'click', add2);
+				kampfer.events.addListener(p, 'click', function() {
+					equal(count, 1, 'count : checked');
 					start();
-				};
-				kampfer.events.addListener(p, 'click', handler);
-				kampfer.events.addListener(p, 'click', handler2);
+				});
 				//删除同一事件的所有listener
 				//删除不同事件的相同listener
 				//删除不同事件的所有listener
 				//删除所有事件
+			});
+
+			asyncTest('clear all listeners', function() {
+				clearEvent();
+
+				function throwError() {
+					ok(!true);
+				}
+				kampfer.events.addListener(c, 'click', throwError);
+				kampfer.events.addListener(c, 'mouseover', throwError);
+				kampfer.events.addListener(c, 'mousedown', throwError);
+				kampfer.events.addListener(c, 'mouseup', throwError);
+				kampfer.events.addListener(c, 'mouseup', function() {
+					start();
+				});
+				kampfer.events.removeListener(c);
 			});
 
 			test('clear elem listeners', function() {
