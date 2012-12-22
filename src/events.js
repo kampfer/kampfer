@@ -80,16 +80,13 @@ kampfer.events.Event.prototype = {
 };
 
 //所有事件对象都拥有下面的属性
-kampfer.events.Event.props = 'altKey bubbles cancelable ctrlKey 
-	currentTarget eventPhase metaKey relatedTarget shiftKey target 
-	timeStamp view which'.split(' ');
+kampfer.events.Event.props = 'altKey bubbles cancelable ctrlKey currentTarget eventPhase metaKey relatedTarget shiftKey target timeStamp view which'.split(' ');
 
 //键盘事件对象拥有下面的属性
 kampfer.events.Event.keyProps = 'char charCode key keyCode'.split(' ');
 
 //鼠标事件对象拥有下面的属性
-kampfer.events.Event.mouseProps = 'button buttons clientX clientY fromElement 
-	offsetX offsetY pageX pageY screenX screenY toElement'.split(' ');
+kampfer.events.Event.mouseProps = 'button buttons clientX clientY fromElement offsetX offsetY pageX pageY screenX screenY toElement'.split(' ');
 
 
 /*
