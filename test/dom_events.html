@@ -40,6 +40,7 @@
 			function clearEvent() {
 				kampfer.events.removeListener(p);
 				kampfer.events.removeListener(c);
+				kampfer.events.removeListener(a);
 			}
 
 			/**/
@@ -64,20 +65,17 @@
 					}
 				});
 			});
-
-			asyncTest('addListener : 重复绑定事件', function() {
+			
+			asyncTest('addListener : 执行顺序', function() {
 				clearEvent();
-
-				var triggerCount = 0;
-				kampfer.events.addListener(c, ['click', 'click'], function() {
-					triggerCount++;
-					if(triggerCount > 1) {
-						equal(triggerCount, 2, '2 click : checked');
-					}
-				});
+				
+				var order = [];
 				kampfer.events.addListener(c, 'click', function() {
-					triggerCount++;
-					equal(triggerCount, 3, '3 click : checked');
+					order.push(1);
+				}); 
+				kampfer.events.addListener(c, 'click', function() {
+					order.push(2);
+					ok(order[0] < order[1], 'order : checked');
 					start();
 				});
 			});
@@ -106,7 +104,7 @@
 				strictEqual(eventsObj.listeners.click[0].listener, fn, 'listener : checked');
 			});
 
-			asyncTest('removeListener one listener', function() {
+			asyncTest('removeListener(elem, type, listener)', function() {
 				clearEvent();
 
 				//删除同一事件的单个listener
@@ -117,42 +115,69 @@
 				var add2 = function() {
 					count += 2;
 				};
-				kampfer.events.addListener(p, 'click', add);
-				kampfer.events.addListener(p, 'click', add2);
-				kampfer.events.removeListener(p, 'click', add2);
-				kampfer.events.addListener(p, 'click', function() {
+				kampfer.events.addListener(c, 'click', add);
+				kampfer.events.addListener(c, 'click', add2);
+				kampfer.events.removeListener(c, 'click', add2);
+				kampfer.events.addListener(c, 'click', function() {
 					equal(count, 1, 'count : checked');
 					start();
-				});
-				//删除同一事件的所有listener
-				//删除不同事件的相同listener
-				//删除不同事件的所有listener
-				//删除所有事件
+				});				
 			});
+			
+			//删除所有事件
+			test('removeListener(elem) clear all listeners', function() {	
+				kampfer.events.removeListener(c);
 
-			asyncTest('clear all listeners', function() {
+				var eventsObj = kampfer.data.getDataInternal(c, 'events');
+				ok(!eventsObj, 'clear all listenners : checked');
+			});
+			
+			//删除同一事件的所有listener
+			asyncTest('removeListener(elem, type)删除同一类型的所有事件', 1, function() {
 				clearEvent();
 
-				function throwError() {
-					ok(!true);
-				}
-				kampfer.events.addListener(c, 'click', throwError);
-				kampfer.events.addListener(c, 'mouseover', throwError);
-				kampfer.events.addListener(c, 'mousedown', throwError);
-				kampfer.events.addListener(c, 'mouseup', throwError);
-				kampfer.events.addListener(c, 'mouseup', function() {
+				var triggers = [];
+				kampfer.events.addListener(c, 'click', function() {
+					ok(!true, 'click');	
+				});
+				kampfer.events.addListener(c, 'click', function(event) {
+					triggers.push(event.type);
+				});
+				kampfer.events.addListener(c, 'mouseup', function(event) {
+					triggers.push(event.type);
+					ok(triggers.join('') === 'mouseup', 'checked');
 					start();
 				});
-				kampfer.events.removeListener(c);
+				kampfer.events.removeListener(c, 'click');
 			});
 
-			test('clear elem listeners', function() {
+			test('check removeListener internal operation', function() {
 				clearEvent();
-				ok(true);
+				
+				var fn = function() {};
+				var fn2 = function(event) {};
+				kampfer.events.addListener(c, 'click', fn);
+				kampfer.events.addListener(c, 'click', fn2);
+				kampfer.events.addListener(c, 'mouseup', fn);
+				var eventsObj = kampfer.data.getDataInternal(c, 'events');
+				ok(eventsObj && eventsObj.proxy && eventsObj.listeners.click.length === 2 &&
+					eventsObj.listeners.mouseup.length === 1, 'listener exist : checked');
+
+				kampfer.events.removeListener(c, 'click', fn);
+				ok(eventsObj.proxy && eventsObj.listeners.mouseup.length === 1 &&
+					eventsObj.listeners.click.length === 1, 'array length - 1 : checked');
+
+				kampfer.events.removeListener(c, 'click', fn2);
+				ok(eventsObj.proxy && eventsObj.listeners.mouseup.length === 1 && 
+					!eventsObj.listeners.click, 'click array is removed : checked');
+
+				kampfer.events.removeListener(c, 'mouseup', fn);
+				eventsObj = kampfer.data.getDataInternal(c, 'events');
+				ok(!eventsObj, 'events cache removed : checked');
 			});
 
 			asyncTest('check this and event', function() {
-				clearEvent();
+				clearEvent(); 
 
 				kampfer.events.addListener(c, 'click', function(event) {
 					strictEqual(this, c, 'this checked');

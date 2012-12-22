@@ -79,23 +79,18 @@ kampfer.events.Event.prototype = {
 	}
 };
 
-//判断事件是否为键盘事件
-kampfer.events.Event.isKeyEvent = function(type) {
-	if( kampfer.type(type) !== 'string' ) {
-		type = type.type;
-	}
-	var reg = /^key/;
-	return reg.test(type);
-};
+//所有事件对象都拥有下面的属性
+kampfer.events.Event.props = 'altKey bubbles cancelable ctrlKey 
+	currentTarget eventPhase metaKey relatedTarget shiftKey target 
+	timeStamp view which'.split(' ');
 
-//判断事件是否为鼠标事件
-kampfer.events.Event.isMouseEvent = function(type) {
-	if( kampfer.type(type) !== 'string' ) {
-		type = type.type;
-	}
-	var reg = /^(?:mouse|contextmenu)|click/;
-	return reg.test(type);
-};
+//键盘事件对象拥有下面的属性
+kampfer.events.Event.keyProps = 'char charCode key keyCode'.split(' ');
+
+//鼠标事件对象拥有下面的属性
+kampfer.events.Event.mouseProps = 'button buttons clientX clientY fromElement 
+	offsetX offsetY pageX pageY screenX screenY toElement'.split(' ');
+
 
 /*
  * 修复event,处理兼容性问题
@@ -107,11 +102,90 @@ kampfer.events.fixEvent = function(event) {
 
 	if( event[kampfer.expando] ) {
 		return event;
+	}
+	event = new kampfer.events.Event(oriEvent);
+	
+	kampfer.each(kampfer.events.Event.props, function(i, prop) {
+		event[prop] = oriEvent[prop];
+	});
+
+	if( kampfer.events.isKeyEvent(event.type) ) {
+		kampfer.events.fixKeyEvent(event, oriEvent);
 	} else {
-		event = new kampfer.events.Event(oriEvent);
+		kampfer.events.fixMouseEvent(event, oriEvent);
 	}
 
-	event.target = oriEvent.target || oriEvent.srcElement;
+	event.target = oriEvent.target || oriEvent.srcElement || document;
+
+	// Target should not be a text node (jQuery bugs#504, Safari)
+	if(event.target.nodeType === 3) {
+		event.target = event.target.parentNode;
+	}
+
+	event.currentTarget = null;
+
+	// ie不支持metaKey, 设置值为false
+	event.metaKey = !!event.metaKey;
+
+	return event;
+};
+
+//判断事件是否为键盘事件
+kampfer.events.isKeyEvent = function(type) {
+	return /^key/.test(type);
+};
+
+//判断事件是否为鼠标事件
+kampfer.events.isMouseEvent = function(type) {
+	return /^(?:mouse|contextmenu)|click/.test(type);
+};
+
+//修复鼠标键盘对象
+kampfer.events.fixKeyEvent = function(event, oriEvent) {
+	kampfer.each(kampfer.events.Event.keyProps, function(i, prop) {
+		event[prop] = oriEvent[prop];
+	});
+
+	// Add which for key events
+	if ( event.which == null ) {
+		event.which = oriEvent.charCode != null ? oriEvent.charCode : oriEvent.keyCode;
+	}
+
+	return event;
+};
+
+//修复鼠标事件对象
+kampfer.events.fixMouseEvent = function(event, oriEvent) {
+	kampfer.each(kampfer.events.Event.mouseProps, function(i, prop) {
+		event[prop] = oriEvent[prop];
+	});
+
+	var eventDoc, doc, body,
+		button = oriEvent.button,
+		fromElement = oriEvent.fromElement;
+
+	// Calculate pageX/Y if missing and clientX/Y available
+	if ( event.pageX == null && oriEvent.clientX != null ) {
+		eventDoc = event.target.ownerDocument || document;
+		doc = eventDoc.documentElement;
+		body = eventDoc.body;
+
+		event.pageX = oriEvent.clientX + ( doc && doc.scrollLeft || body && body.scrollLeft || 0 ) - 
+			( doc && doc.clientLeft || body && body.clientLeft || 0 );
+		event.pageY = oriEvent.clientY + ( doc && doc.scrollTop  || body && body.scrollTop  || 0 ) - 
+			( doc && doc.clientTop  || body && body.clientTop  || 0 );
+	}
+
+	// Add relatedTarget, if necessary
+	if ( !event.relatedTarget && fromElement ) {
+		event.relatedTarget = fromElement === event.target ? oriEvent.toElement : fromElement;
+	}
+
+	// Add which for click: 1 === left; 2 === middle; 3 === right
+	// Note: button is not normalized, so don't use it
+	if ( !event.which && button !== undefined ) {
+		event.which = ( button & 1 ? 1 : ( button & 2 ? 3 : ( button & 4 ? 2 : 0 ) ) );
+	}
 
 	return event;
 };
@@ -361,6 +435,7 @@ kampfer.events.dispatchEvent = function(event) {
 		return;
 	}
 
+	// fix currentTarget in ie6/7/8
 	event.currentTarget = this;
 
 	for(var i = 0, l; l = listeners[i]; i++) {

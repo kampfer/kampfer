@@ -153,7 +153,7 @@ kampfer.data.getData = function(elem, name, internal) {
 
 	thisCache = cache[cacheId];
 	if(!internal) {
-		thisCache = thisCache.data;
+		thisCache = thisCache.data || {};
 	}
 
 	if(hasName) {
