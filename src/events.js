@@ -370,6 +370,8 @@ kampfer.events.dispatch = function(elem, eventType) {
 	for(var cur = elem; cur; cur = cur.parentNode) {
 		bubblePath.push(cur);
 	}
+	//W3C标准中事件冒泡的终点时document,而jQuery.trigger会冒泡到window
+	//这里有必要跟jQuery一样吗？？？？
 	//冒泡的最后一站始终是window对象
 	if( cur === (elem.ownerDocument || document) ) {
 		bubblePath.push(elem.defaultView || elem.parentWindow || window);

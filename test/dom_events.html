@@ -176,22 +176,33 @@
 				ok(!eventsObj, 'events cache removed : checked');
 			});
 
-			asyncTest('check this and event', function() {
+			asyncTest('check this and mouse event', function() {
 				clearEvent(); 
 
 				kampfer.events.addListener(c, 'click', function(event) {
+					console.log(event);
 					strictEqual(this, c, 'this checked');
 
 					ok(event[kampfer.expando], 'event.expando checked');
+
+					var checkProp = function(prop, event) {
+						if(prop in event) {
+							ok(true, prop + ' : checked');
+						}
+					};
+					var eventProps = "altKey bubbles cancelable ctrlKey currentTarget eventPhase metaKey relatedTarget shiftKey target timeStamp view which".split(" ");
+					kampfer.each(eventProps, function(i, prop) {
+						checkProp(prop, event);
+					});
+
+					var mouseEventProps = 'button buttons clientX clientY fromElement offsetX offsetY pageX pageY screenX screenY toElement'.split(' ');
+					kampfer.each(mouseEventProps, function(i, prop) {
+						checkProp(prop, event);
+					});
+
 					strictEqual(event.type, 'click', 'event.type checked');
 					strictEqual(event.target, c, 'event.target checked');
 					strictEqual(event.currentTarget, c, 'event.currentTarget checked');
-					ok(event.pageX && event.pageY, 'event.pageX and event.pageY checked');
-					ok(event.preventDefault, 'event.preventDefault checked');
-					ok(event.stopPropagation, 'event.stopPropagation checked');
-					ok(event.stopImmediatePropagation, 'event.stopImmediatePropagation checked');
-					ok(event.dispose, 'event.dispose checked');
-					ok(event.which, 'event.which checked');
 				});
 
 				kampfer.events.addListener(p, 'click', function(event) {
@@ -199,6 +210,23 @@
 
 					strictEqual(event.currentTarget, p, 'event.currentTarget checked');
 
+					start();
+				});
+			});
+
+			asyncTest('按任意键盘键开始check key event', function() {
+				clearEvent();
+
+				kampfer.events.addListener(document, 'keyup', function(event) {
+					var checkProp = function(prop, event) {
+						if(prop in event) {
+							ok(true, prop + ' : checked');
+						}
+					};
+					var eventProps = "char charCode key keyCode".split(" ");
+					kampfer.each(eventProps, function(i, prop) {
+						checkProp(prop, event);
+					});
 					start();
 				});
 			});
@@ -256,6 +284,22 @@
 			test('trigger defaultAction', function() {
 				clearEvent();
 				ok(true);
+			});
+
+			//chrome firefox通过, ie8无法通过
+			test('通过elem.click()触发addEventListener/attachEvent绑定的click事件', function() {
+				var div = document.createElement('div');
+				var handler = function() {
+					ok(true, 'div.click() checked!');
+				};
+
+				if(div.addEventListener) {
+					div.addEventListener('click', handler, false);
+				} else if(div.attachEvent) {
+					div.attachEvent('onclick', handler, false);
+				}
+
+				div.click();
 			});
 		</script>
 	</body>
