@@ -106,13 +106,9 @@ kampfer.events.fixEvent = function(event) {
 		event[prop] = oriEvent[prop];
 	});
 
-	if( kampfer.events.isKeyEvent(event.type) ) {
-		kampfer.events.fixKeyEvent(event, oriEvent);
-	} else {
-		kampfer.events.fixMouseEvent(event, oriEvent);
+	if(!event.target) {
+		event.target = oriEvent.srcElement || document;
 	}
-
-	event.target = oriEvent.target || oriEvent.srcElement || document;
 
 	// Target should not be a text node (jQuery bugs#504, Safari)
 	if(event.target.nodeType === 3) {
@@ -123,6 +119,13 @@ kampfer.events.fixEvent = function(event) {
 
 	// ie不支持metaKey, 设置值为false
 	event.metaKey = !!event.metaKey;
+
+	//修复鼠标事件之前必须保证event.target存在
+	if( kampfer.events.isKeyEvent(event.type) ) {
+		kampfer.events.fixKeyEvent(event, oriEvent);
+	} else {
+		kampfer.events.fixMouseEvent(event, oriEvent);
+	}
 
 	return event;
 };
