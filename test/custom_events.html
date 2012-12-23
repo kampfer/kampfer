@@ -24,6 +24,10 @@
 		<!--	共用文件，不要修改	end	-->
 
 		<script type="text/javascript">
+			window.addEventListener('beforeunload', function(event) {
+				event.returnValue = '111';
+				return '111';
+			});
 		</script>
 	</body>
 </html>

@@ -180,7 +180,6 @@
 				clearEvent(); 
 
 				kampfer.events.addListener(c, 'click', function(event) {
-					console.log(event);
 					strictEqual(this, c, 'this checked');
 
 					ok(event[kampfer.expando], 'event.expando checked');
@@ -300,6 +299,12 @@
 				}
 
 				div.click();
+			});
+
+			test('beforeunload', 0, function() {
+				kampfer.events.addListener(window, 'beforeunload', function() {
+					return '确认刷新';
+				});
 			});
 		</script>
 	</body>

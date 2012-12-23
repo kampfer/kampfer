@@ -448,5 +448,10 @@ kampfer.events.dispatchEvent = function(event) {
 		}
 	}
 
+	// for beforeunload on firefox
+	if(event.result !== undefined) {
+		event.src.returnValue = event.result;
+	}
+
 	return event.result;
 };
