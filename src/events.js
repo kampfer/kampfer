@@ -49,6 +49,10 @@ kampfer.events.Event.prototype = {
 		this.propagationStopped = true;
 
 		var e = this.src;
+		if(!e) {
+			return;
+		}
+
 		if(e.stopPropagation) {
 			e.stopPropagation();
 		} else {
@@ -67,6 +71,10 @@ kampfer.events.Event.prototype = {
 		this.isDefaultPrevented = true;
 		
 		var e = this.src;
+		if(!e) {
+			return;
+		}
+		
 		if (e.preventDefault) {
 			e.preventDefault();
 		} else {
@@ -338,30 +346,19 @@ kampfer.events.removeListener = function(elem, eventType, listener) {
  * @param {object}elem
  * @param {string||array}eventType
  */
-kampfer.events.dispatch = function(elem, eventType) {
-	if(elem.nodeType === 3 || elem.nodeType === 8 || !eventType) {
+kampfer.events.dispatch = function(elem, event) {
+	if(elem.nodeType === 3 || elem.nodeType === 8 || !event) {
 		return;
 	}
 
-	var type = kampfer.type(eventType),
-		args = Array.prototype.slice.call(arguments);
-
-	//一次触发多个事件
-	if(type === 'array') {
-		for(var i = 0, e; e = eventType[i]; i++) {
-			args[1] = e;
-			kampfer.events.dispatch.apply(null, args);
-		}
-		return;
-	}
-
-	if(type !== 'string') {
-		return;
-	}
-
-	var event = new kampfer.events.Event(eventType),
+	var eventType = event.type || event,
+		args = Array.prototype.slice.call(arguments),
 		bubblePath = [],
 		onType = 'on' + eventType;
+
+	if(!event[kampfer.expando]) {
+		event = new kampfer.events.Event(event);
+	}
 
 	args = Array.prototype.slice.call(arguments, 2);
 	args.unshift(event);
@@ -382,7 +379,7 @@ kampfer.events.dispatch = function(elem, eventType) {
 		bubblePath.push(elem.defaultView || elem.parentWindow || window);
 	}
 
-	for(i = 0; cur = bubblePath[i]; i++) {
+	for(i = 0; cur = !event.propagationStopped && bubblePath[i]; i++) {
 
 		var eventsObj = kampfer.data.getDataInternal(cur, 'events');
 
@@ -401,6 +398,7 @@ kampfer.events.dispatch = function(elem, eventType) {
 		proxy = cur[onType];
 		if(proxy && proxy.apply(cur, args) === false) {
 			event.preventDefault();
+			event.stopPropagation();
 		}
 
 		// 触发浏览器default action
@@ -420,7 +418,10 @@ kampfer.events.dispatch = function(elem, eventType) {
 				elem[onType] = old;
 			}
 		}
+
 	}
+
+	return event.result;
 };
 
 

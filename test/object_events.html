@@ -11,6 +11,7 @@
 		<!--	共用文件，不要修改	end	-->
 		<script type="text/javascript">
 			/*global ok, console, k, kampfer, test, QUnit*/
+			QUnit.config.reorder = false;
 			kampfer.require('events');
 		</script>
 	</head>
@@ -29,7 +30,7 @@
 		</div>
 		<script type="text/javascript">
 			var oP = {};
-			var oC = {parentNode:p};
+			var oC = {parentNode:oP};
 			var p = document.getElementById('p');
 			var c = document.getElementById('c');
 			var a = document.getElementById('a');
@@ -51,6 +52,8 @@
 			});
 
 			test('bubble', function() {
+				clearEvent();
+
 				var path = [];
 				kampfer.events.addListener(oC, 'say', function() {
 					path.push('oC');
@@ -59,9 +62,23 @@
 					path.push('oP');
 				});
 				kampfer.events.dispatch(oC, 'say');
+				equal( path.join('->'), 'oC->oP', 'bubble path : checked');
 			});
 
-			test('')
+			test('stopPropagation', function() {
+				clearEvent();
+				
+				var path = [];
+				kampfer.events.addListener(oC, 'say', function(event) {
+					event.stopPropagation();
+					path.push('oC');
+				});
+				kampfer.events.addListener(oP, 'say', function() {
+					path.push('oP');
+				});
+				kampfer.events.dispatch(oC, 'say');
+				equal( path.join('->'), 'oC', 'bubble path : checked');
+			});
 		</script>
 	</body>
 </html>
