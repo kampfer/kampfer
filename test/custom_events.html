@@ -22,8 +22,34 @@
 		<h2 id="qunit-userAgent"></h2>
 		<ol id="qunit-tests"></ol>
 		<!--	共用文件，不要修改	end	-->
-
+		<div id="p" style="position:absolute;right:0;top:0;">
+			<div id="c">
+				<a href="http://www.google.com" target="_blank" id="a">点击此处开始测试</a>
+			</div>
+		</div>
 		<script type="text/javascript">
+			var oP = {};
+			var oC = {parentNode:p};
+			var p = document.getElementById('p');
+			var c = document.getElementById('c');
+			var a = document.getElementById('a');
+
+			function clearEvent() {
+				kampfer.events.removeListener(p);
+				kampfer.events.removeListener(c);
+				kampfer.events.removeListener(a);
+				kampfer.events.removeListener(oC);
+				kampfer.events.removeListener(oP);
+			}
+
+			asyncTest('add custom events to dom elem', function() {
+				kampfer.events.addListener(oP, 'say', function() {
+					ok(true, 'say execute : checked');
+					start();
+				});
+
+				kampfer.events.dispatch(oP, 'say');
+			});
 		</script>
 	</body>
 </html>
