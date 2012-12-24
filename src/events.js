@@ -255,19 +255,21 @@ kampfer.events.addListener = function(elem, eventType, listener, context) {
 			events.proxy.elem = elem;
 		}
 
-		if(elem.addEventListener) {
-			elem.addEventListener(eventType, events.proxy, false);
-		} else if(elem.attachEvent) {
-			elem.attachEvent('on' + eventType, events.proxy);
-		}
-
 		if(!events.listeners) {
 			events.listeners = {};
 		}
 
 		if(!events.listeners[eventType]) {
 			events.listeners[eventType] = [];
+
+			//events.listeners[eventType]不存在说明没有绑定过此事件
+			if(elem.addEventListener) {
+				elem.addEventListener(eventType, events.proxy, false);
+			} else if(elem.attachEvent) {
+				elem.attachEvent('on' + eventType, events.proxy);
+			}
 		}
+
 		events.listeners[eventType].push(listenerObj);
 	}
 
