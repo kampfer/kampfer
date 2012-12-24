@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-		<title>test custom events</title>
+		<title>test events of plain object</title>
 		<!--	共用文件，不要修改	start	-->
 		<link href="qunit/qunit/qunit.css" rel="stylesheet" type="text/css" />
 		<script type="text/javascript" src="../src/base.js"></script>
@@ -42,14 +42,26 @@
 				kampfer.events.removeListener(oP);
 			}
 
-			asyncTest('add custom events to dom elem', function() {
+			test('add custom events to dom elem', function() {
 				kampfer.events.addListener(oP, 'say', function() {
-					ok(true, 'say execute : checked');
-					start();
+					ok(true, 'say executed : checked');
 				});
 
 				kampfer.events.dispatch(oP, 'say');
 			});
+
+			test('bubble', function() {
+				var path = [];
+				kampfer.events.addListener(oC, 'say', function() {
+					path.push('oC');
+				});
+				kampfer.events.addListener(oP, 'say', function() {
+					path.push('oP');
+				});
+				kampfer.events.dispatch(oC, 'say');
+			});
+
+			test('')
 		</script>
 	</body>
 </html>

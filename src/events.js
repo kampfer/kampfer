@@ -336,7 +336,7 @@ kampfer.events.removeListener = function(elem, eventType, listener) {
 /*
  * 触发对象的指定事件
  * @param {object}elem
- * @param {type}type
+ * @param {string||array}eventType
  */
 kampfer.events.dispatch = function(elem, eventType) {
 	if(elem.nodeType === 3 || elem.nodeType === 8 || !eventType) {
