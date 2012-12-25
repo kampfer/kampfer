@@ -307,6 +307,17 @@
 				kampfer.events.dispatch(a, 'click');
 				ok(true);
 			});
+
+			test('stop trigger defaultAction', function() {
+				clearEvent();
+
+				kampfer.events.addListener(a, 'click', function() {
+					return false;
+				});
+
+				kampfer.events.dispatch(a, 'click');
+				ok(true);
+			});
 		</script>
 	</body>
 </html>

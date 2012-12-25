@@ -460,7 +460,7 @@ kampfer.events.dispatchEvent = function(event) {
 	}
 
 	// for beforeunload on firefox
-	if(event.result !== undefined) {
+	if(event.result !== undefined && event.src) {
 		event.src.returnValue = event.result;
 	}
 
