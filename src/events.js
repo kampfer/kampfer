@@ -406,24 +406,24 @@ kampfer.events.dispatch = function(elem, event) {
 			event.stopPropagation();
 		}
 
-		// 触发浏览器default action
-		if(!event.isDefaultPrevented && !kampfer.isWindow(elem) && elem[eventType]) {
-			var old = elem[onType];
-			if(old) {
-				elem[onType] = null;
-			}
+	}
 
-			kampfer.events.triggered = eventType;
-			try {
-				elem[eventType]();
-			} catch(e) {}
-			delete kampfer.events.triggered;
-
-			if(old) {
-				elem[onType] = old;
-			}
+	// 触发浏览器default action
+	if(!event.isDefaultPrevented && !kampfer.isWindow(elem) && elem[eventType]) {
+		var old = elem[onType];
+		if(old) {
+			elem[onType] = null;
 		}
 
+		kampfer.events.triggered = eventType;
+		try {
+			elem[eventType]();
+		} catch(e) {}
+		delete kampfer.events.triggered;
+
+		if(old) {
+			elem[onType] = old;
+		}
 	}
 
 	return event.result;

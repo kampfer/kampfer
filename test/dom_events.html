@@ -280,11 +280,6 @@
 				});
 			});
 
-			test('trigger defaultAction', function() {
-				clearEvent();
-				ok(true);
-			});
-
 			test('通过elem.click()触发addEventListener/attachEvent绑定的click事件', function() {
 				var div = document.createElement('div');
 				var handler = function() {
@@ -304,6 +299,13 @@
 				kampfer.events.addListener(window, 'beforeunload', function() {
 					return '确认刷新';
 				});
+			});
+
+			test('trigger defaultAction', function() {
+				clearEvent();
+
+				kampfer.events.dispatch(a, 'click');
+				ok(true);
 			});
 		</script>
 	</body>

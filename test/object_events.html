@@ -50,6 +50,57 @@
 				kampfer.events.dispatch(oP, 'say');
 			});
 
+			test('重复绑定', function() {
+				clearEvent();
+
+				var path = [];
+				kampfer.events.addListener(oC, 'say', function() {
+					path.push('say');
+				});
+				kampfer.events.addListener(oC, ['say', 'cry'], function(event) {
+					path.push(event.type);
+				});
+				kampfer.events.dispatch(oC, 'say');
+				equal( path.join('->'), 'say->say', 'path : checked');
+				path = [];
+				kampfer.events.dispatch(oC, 'cry');
+				equal( path.join('->'), 'cry', 'path : checked');
+			});
+
+			test('removeListener', function() {
+				var path = [];
+				var fn = function(event) {
+					path.push(event.type);
+				};
+				kampfer.events.addListener(oC, 'say', fn);
+				kampfer.events.addListener(oC, 'say', function() {
+					path.push('say2');
+				});
+				kampfer.events.addListener(oC, 'say', function() {
+					path.push('say3');
+				});
+				kampfer.events.addListener(oC, 'cry', fn);
+				kampfer.events.addListener(oC, 'smile', fn);
+
+				//删除一个listener
+				kampfer.events.removeListener(oC, 'say', fn);
+				kampfer.events.dispatch(oC, 'say');
+				equal( path.join('->'), 'say2->say3', 'path : checked');
+
+				//删除一个事件所有的listener
+				path = [];
+				kampfer.events.removeListener(oC, 'say');
+				kampfer.events.dispatch(oC, 'say');
+				equal( path.join('->'), '', 'path : checked');
+
+				//删除所有事件
+				path = [];
+				kampfer.events.removeListener(oC);
+				kampfer.events.dispatch(oC, 'cry');
+				kampfer.events.dispatch(oC, 'smile');
+				equal( path.join('->'), '', 'path : checked');
+			});
+
 			test('bubble', function() {
 				clearEvent();
 
