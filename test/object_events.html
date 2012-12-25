@@ -9,6 +9,11 @@
 		<script type="text/javascript" src="../src/base.js"></script>
 		<script type="text/javascript" src="qunit/qunit/qunit.js"></script>
 		<!--	共用文件，不要修改	end	-->
+		<style type="text/css">
+			#p,#c{width:100px;height:100px;}
+			#p{padding:100px;background-color:blue;margin-top:20px;}
+			#c{background-color:red;}
+		</style>
 		<script type="text/javascript">
 			/*global ok, console, k, kampfer, test, QUnit*/
 			QUnit.config.reorder = false;
@@ -31,14 +36,8 @@
 		<script type="text/javascript">
 			var oP = {};
 			var oC = {parentNode:oP};
-			var p = document.getElementById('p');
-			var c = document.getElementById('c');
-			var a = document.getElementById('a');
 
 			function clearEvent() {
-				kampfer.events.removeListener(p);
-				kampfer.events.removeListener(c);
-				kampfer.events.removeListener(a);
 				kampfer.events.removeListener(oC);
 				kampfer.events.removeListener(oP);
 			}
@@ -78,6 +77,65 @@
 				});
 				kampfer.events.dispatch(oC, 'say');
 				equal( path.join('->'), 'oC', 'bubble path : checked');
+			});
+
+			test('stopImmediatePropagation', function() {
+				clearEvent();
+
+				var path = [];
+				kampfer.events.addListener(oC, 'say', function(event) {
+					event.stopImmediatePropagation();
+					path.push('oC');
+				});
+				kampfer.events.addListener(oC, 'say', function() {
+					path.push('oC');
+				});
+				kampfer.events.addListener(oP, 'say', function() {
+					path.push('oP');
+				});
+
+				kampfer.events.dispatch(oC, 'say');
+				equal( path.join('->'), 'oC', 'stopImmediatePropagation : checked');
+			});
+
+			test('event', function() {
+				clearEvent();
+
+				kampfer.events.addListener(oC, 'say', function(event) {
+					equal(event.type, 'say', 'event.type : checked');
+					strictEqual(event.target, oC, 'event.target : checked');
+					strictEqual(event.currentTarget, oC, 'event.currentTarget : checked');
+				});
+				kampfer.events.addListener(oP, 'say', function(event) {
+					strictEqual(event.currentTarget, oP, 'event.currentTarget : checked');
+				});
+
+				kampfer.events.dispatch(oC, 'say');
+			});
+
+			test('custom event object', function() {
+				clearEvent();
+				
+				kampfer.events.addListener(oC, 'say', function(event) {
+					equal(event.pageX, 100, 'event.pageX : checked');
+				});
+
+				kampfer.events.dispatch(oC, {
+					type : 'say',
+					pageX : 100
+				});
+			});
+
+			test('extra arguments', function() {
+				clearEvent();
+
+				kampfer.events.addListener(oC, 'say', function(event) {
+					strictEqual(arguments[1], data, 'arguments[1] : checked');
+					equal(arguments[2], 'test', 'arguments[2] : checked');
+				});
+
+				var data = {};
+				kampfer.events.dispatch(oC, 'say', data, 'test');
 			});
 		</script>
 	</body>

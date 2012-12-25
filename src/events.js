@@ -30,7 +30,7 @@ kampfer.events.Event = function(src, props) {
 	}
 
 	if(kampfer.type(props) === 'object') {
-		kampfer.extend(event, props);
+		kampfer.extend(this, props);
 	}
 
 	this.isImmediatePropagationStopped = false;
@@ -99,15 +99,16 @@ kampfer.events.Event.mouseProps = 'button buttons clientX clientY fromElement of
 
 /*
  * 修复event,处理兼容性问题
- * @param {object}event 浏览器生成的原始event对象
+ * @param {object||string}event 
  * @return {object} 修复的event对象
  */
 kampfer.events.fixEvent = function(event) {
-	var oriEvent = event;
-
 	if( event[kampfer.expando] ) {
 		return event;
 	}
+
+	var oriEvent = event;
+
 	event = new kampfer.events.Event(oriEvent);
 	
 	kampfer.each(kampfer.events.Event.props, function(i, prop) {
@@ -356,7 +357,11 @@ kampfer.events.dispatch = function(elem, event) {
 		bubblePath = [],
 		onType = 'on' + eventType;
 
-	if(!event[kampfer.expando]) {
+	if(typeof event === 'object') {
+		if( !event[kampfer.expando] ) {
+			event = new kampfer.events.Event(eventType, event);
+		}
+	} else {
 		event = new kampfer.events.Event(event);
 	}
 
