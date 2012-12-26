@@ -176,6 +176,99 @@
 				ok(!eventsObj, 'events cache removed : checked');
 			});
 
+			asyncTest('bubble', function() {
+				clearEvent();
+
+				var path = [];
+				kampfer.events.addListener(p, 'click', function() {
+					path.push('p');
+					strictEqual(path.join('->'), 'c->p', 'path : checked');
+					start();
+				});
+				kampfer.events.addListener(c, 'click', function() {
+					path.push('c');
+				});
+			});
+
+			asyncTest('preventDefault', function() {
+				clearEvent();
+				kampfer.events.addListener(a, 'click', function(event) {
+					event.preventDefault();
+					ok(true, 'event.preventDefault : checked');
+					start();
+				});
+			});
+
+			asyncTest('stopPropagation', function() {
+				clearEvent();
+				kampfer.events.addListener(p, 'click', function() {
+					throw 'Propagation is not stoped';
+				});
+				kampfer.events.addListener(c, 'click', function(event) {
+					event.stopPropagation();
+					ok(true, 'Propagation is stoped');
+					start();
+				});
+			});
+
+			asyncTest('stopImmediatePropagation', function() {
+				clearEvent();
+				kampfer.events.addListener(p, 'click', function() {
+					throw 'Propagation is not stoped';
+				});
+				kampfer.events.addListener(c, 'click', function(event) {
+					event.stopImmediatePropagation();
+					ok(true);
+					start();
+				});
+				kampfer.events.addListener(c, 'click', function(event) {
+					throw 'ImmediatePropagation is not stoped';
+				});
+			});
+
+			test('dispatch', function() {
+				clearEvent();
+
+				var path = [];
+
+				kampfer.events.addListener(c, 'click', function() {
+					path.push('c click');
+				});
+				kampfer.events.dispatch(c, 'click');
+				equal(path.join('->'), 'c click');
+
+				path = [];
+				kampfer.events.addListener(p, 'click', function() {
+					path.push('p click');
+				});
+				kampfer.events.dispatch(c, 'click');
+				equal(path.join('->'), 'c click->p click');
+
+				kampfer.events.addListener(c, 'click', function() {
+					strictEqual(arguments[1], data);
+					equal(arguments[2], 'foo');
+				});
+				var data = {};
+				kampfer.events.dispatch(c, 'click', data, 'foo');
+
+				clearEvent();
+
+				kampfer.events.addListener(c, 'click', function(event) {
+					equal(event.type, 'click', 'event.type : checked');
+					equal(event.foo, 'click', 'event.type : checked');
+					strictEqual(event.target, c, 'event.target : check');
+					strictEqual(event.currentTarget, c, 'event.target : check');
+					strictEqual(this, c, 'event.target : check');
+				});
+				kampfer.events.dispatch(c, {type:'click',foo:'click'});
+
+				clearEvent();
+
+				kampfer.events.addListener(c, 'click', function() {
+
+				});
+			});
+
 			asyncTest('check this and mouse event', function() {
 				clearEvent(); 
 
@@ -230,77 +323,6 @@
 				});
 			});
 
-			asyncTest('bubble', function() {
-				clearEvent();
-
-				var path = [];
-				kampfer.events.addListener(p, 'click', function() {
-					path.push('p');
-					strictEqual(path.join('->'), 'c->p', 'path : checked');
-					start();
-				});
-				kampfer.events.addListener(c, 'click', function() {
-					path.push('c');
-				});
-			});
-
-			asyncTest('preventDefault', function() {
-				clearEvent();
-				kampfer.events.addListener(a, 'click', function(event) {
-					event.preventDefault();
-					ok(true, 'event.preventDefault : checked');
-					start();
-				});
-			});
-
-			asyncTest('stopPropagation', function() {
-				clearEvent();
-				kampfer.events.addListener(p, 'click', function() {
-					throw 'Propagation is not stoped';
-				});
-				kampfer.events.addListener(c, 'click', function(event) {
-					event.stopPropagation();
-					ok(true, 'Propagation is stoped');
-					start();
-				});
-			});
-
-			asyncTest('stopImmediatePropagation', function() {
-				clearEvent();
-				kampfer.events.addListener(p, 'click', function() {
-					throw 'Propagation is not stoped';
-				});
-				kampfer.events.addListener(c, 'click', function(event) {
-					event.stopImmediatePropagation();
-					ok(true);
-					start();
-				});
-				kampfer.events.addListener(c, 'click', function(event) {
-					throw 'ImmediatePropagation is not stoped';
-				});
-			});
-
-			test('通过elem.click()触发addEventListener/attachEvent绑定的click事件', function() {
-				var div = document.createElement('div');
-				var handler = function() {
-					ok(true, 'div.click() checked!');
-				};
-
-				if(div.addEventListener) {
-					div.addEventListener('click', handler, false);
-				} else if(div.attachEvent) {
-					div.attachEvent('onclick', handler, false);
-				}
-
-				div.click();
-			});
-
-			test('beforeunload', 0, function() {
-				kampfer.events.addListener(window, 'beforeunload', function() {
-					return '确认刷新';
-				});
-			});
-
 			test('trigger defaultAction', function() {
 				clearEvent();
 
@@ -318,6 +340,31 @@
 				kampfer.events.dispatch(a, 'click');
 				ok(true);
 			});
+
+			test('beforeunload', 0, function() {
+				clearEvent();
+				
+				kampfer.events.addListener(window, 'beforeunload', function() {
+					return '确认刷新';
+				});
+			});
+
+			/*
+			test('通过elem.click()触发addEventListener/attachEvent绑定的click事件', function() {
+				var div = document.createElement('div');
+				var handler = function() {
+					ok(true, 'div.click() checked!');
+				};
+
+				if(div.addEventListener) {
+					div.addEventListener('click', handler, false);
+				} else if(div.attachEvent) {
+					div.attachEvent('onclick', handler, false);
+				}
+
+				div.click();
+			});
+			*/
 		</script>
 	</body>
 </html>
