@@ -1,3 +1,6 @@
 [submodule "test/qunit"]
 	path = test/qunit
 	url = http://github.com/jquery/qunit.git
+[submodule "src/helper/json"]
+	path = src/helper/json
+	url = https://github.com/douglascrockford/JSON-js.git
