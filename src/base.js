@@ -2,7 +2,7 @@
  * @Author : l.w.kampfer@gmail.com 
  */
 
-(function() {
+(function(global) {
 	
 	/**
 	 * @define {boolean} Overridden to true by the compiler when --closure_pass
@@ -23,7 +23,7 @@
 	 * @define	{object}	保存一个对全局对象的引用。
 	 * 一般情况下global指向window对象。
 	 */
-	kampfer.global = this;
+	kampfer.global = global;
 	
 	
 	/**
@@ -189,6 +189,18 @@
 	
 	
 	if(!COMPILED) {
+		
+		/**
+		 * Tries to detect whether is in the context of an HTML document.
+		 * @return {boolean} True if it looks like HTML document.
+		 * @private
+		 */
+		kampfer._inHtmlDocument = function() {
+			var doc = kampfer.global.document;
+			return typeof doc != 'undefined' && 'write' in doc;
+			// XULDocument misses write.
+		};
+
 	
 		/**
 		 * 通过模块名从kampfer保存的依赖性列表中获得真实文件路径
@@ -289,9 +301,13 @@
 		 * @private
 		 */
 		kampfer._writeScriptTag = function(src) {
-			var doc = kampfer.global.document;
-			doc.write('<script type="text/javascript" src="' + src + '"></' + 'script>');
-			return true;
+			if( kampfer._inHtmlDocument() ) {
+				var doc = kampfer.global.document;
+				doc.write('<script type="text/javascript" src="' + src + '"></' + 'script>');
+				return true;
+			} else {
+				return false;
+			}
 		};
 			
 			
@@ -301,10 +317,14 @@
 		 */
 		kampfer._findBasePath = function() {
 			
+			if( !kampfer._inHtmlDocument() ) {
+				return;
+			}
+			
 			var doc = kampfer.global.document,
 				scripts = doc.getElementsByTagName('script');
 				
-			for (var i = scripts.length - 1; i >= 0; --i) {
+			for(var i = scripts.length - 1; i >= 0; --i) {
 				
 				var src = scripts[i].src,
 					qmark = src.lastIndexOf('?'),
@@ -350,7 +370,6 @@
 
 	
 //=====================================================================================
-// 工具函数
 //=====================================================================================
 	
 	/**
@@ -423,14 +442,10 @@
 		}
 		return true;
 	};
-
-
-	// 判断对象是否是window对象
+	
+	
 	kampfer.isWindow = function(obj) {
-		if(obj === this.global) {
-			return true;
-		}
-		return false;
+		return !!obj && obj == obj.window;
 	};
 	
 	
@@ -551,4 +566,4 @@
 	}
 	kampfer.global.kampfer = kampfer.global.k = kampfer;
 	
-})();
+})( (typeof exports !== 'undefined') ? exports : this );
